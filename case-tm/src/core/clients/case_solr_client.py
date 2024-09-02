@@ -223,27 +223,27 @@ class CASESolrClient(SolrClient):
 
         return results.docs[0]["id"], sc
 
-    def get_corpus_CASEdisplayed(self, corpus_col: str) -> Union[List, int]:
+    def get_corpus_EWBdisplayed(self, corpus_col: str) -> Union[List, int]:
         """Returns a list of the fileds of the corpus collection indicating what metadata will be displayed in the CASE upon user request.
 
         Parameters
         ----------
         corpus_col : str
-            Name of the corpus collection whose CASEdisplayed are to be retrieved.
+            Name of the corpus collection whose EWBdisplayed are to be retrieved.
         sc: int
             Status code of the request
         """
 
         sc, results = self.execute_query(q='corpus_name:"'+corpus_col+'"',
                                          col_name=self.corpus_col,
-                                         fl="CASEdisplayed")
+                                         fl="EWBdisplayed")
 
         if sc != 200:
             self.logger.error(
-                f"-- -- Error getting CASEdisplayed of {corpus_col}. Aborting operation...")
+                f"-- -- Error getting EWBdisplayed of {corpus_col}. Aborting operation...")
             return
 
-        return results.docs[0]["CASEdisplayed"], sc
+        return results.docs[0]["EWBdisplayed"], sc
 
     def get_corpus_SearcheableField(self, corpus_col: str) -> Union[List, int]:
         """Returns a list of the fields used for autocompletion in the document search in the similarities function and in the document search function.
@@ -859,18 +859,18 @@ class CASESolrClient(SolrClient):
                 f"-- -- Error executing query Q2. Aborting operation...")
             return
 
-        # 3. Get CASEdisplayed fields of corpus_col
-        CASEdisplayed, sc = self.get_corpus_CASEdisplayed(corpus_col)
+        # 3. Get EWBdisplayed fields of corpus_col
+        EWBdisplayed, sc = self.get_corpus_EWBdisplayed(corpus_col)
         if sc != 200:
             self.logger.error(
-                f"-- -- Error getting CASEdisplayed of {corpus_col}. Aborting operation...")
+                f"-- -- Error getting EWBdisplayed of {corpus_col}. Aborting operation...")
             return
 
         # 4. Filter metadata fields to be displayed in the CASE
         #meta_fields = [field for field in results.docs[0]
-        #               ['fields'] if field in CASEdisplayed]
+        #               ['fields'] if field in EWBdisplayed]
 
-        return {'metadata_fields': CASEdisplayed}, sc
+        return {'metadata_fields': EWBdisplayed}, sc
 
     def do_Q3(self, col: str) -> Union[dict, int]:
         """Executes query Q3.
