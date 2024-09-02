@@ -1,4 +1,4 @@
-# EWB_CONFIG
+# CASE_CONFIG
 
 This folder is mapped to the containers `ewb_restapi` and `ewb_inferencer` so both of all the configuration variables necessary for the proper functitioning of the Evaluation Workbench.
 
