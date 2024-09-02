@@ -16,8 +16,6 @@
 
 CASE is a Solr-based exploitation tool designed to efficiently index metadata and topic information. It is optimized for calculating aggregated indicators, semantic similarities, and supporting web service requests.
 
-![CASE](https://github.com/Nemesis1303/CASE/blob/main/static/Images/nocluehowtocallyourpics.png)
-
 The Solr-powered service is a multi-container application with a Solr search engine for data storage and retrieval. The Python-based RESTful API (`case-tm`) acts as an intermediary between Solr and the user (or frontend). It utilizes two additional services: `case-inferencer` for text inference using indexed models, and `case-classifier` for classification. The TM API also provides endpoints for indexing collections and topic models.
 
 ## Deployment Steps
