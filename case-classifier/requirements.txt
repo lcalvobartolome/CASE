@@ -1,0 +1,8 @@
+clf-inference-intelcomp==0.1.6
+colorama==0.4.6
+colored==1.4.4
+Flask==2.2.5
+flask-restx==1.1.0
+pyfiglet==0.8.post1
+termcolor==2.2.0
+waitress==2.1.2

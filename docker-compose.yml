@@ -1,0 +1,120 @@
+version: "3.8"
+
+networks:
+  case-net:
+  #  driver: bridge
+  #  ipam:
+  #    driver: default
+  #    config:
+  #      - subnet: 192.168.128.0/24
+
+services:
+  tm:
+    build: ./case-tm
+    container_name: case-tm
+    ports:
+      - 20000:82
+    environment:
+      SOLR_URL: http://solr:8983
+      INFERENCE_URL: http://case-inferencer:90
+    depends_on:
+      - solr
+      - inferencer
+    networks:
+      - case-net
+    volumes:
+      - ./data/source:/data/source
+      - ./data/inference:/data/inference
+      - ./case_config:/config
+
+  inferencer:
+    build: ./case-inferencer
+    container_name: case-inferencer
+    ports:
+      - 20001:90
+    networks:
+      - case-net
+    volumes:
+      - ./data/source:/data/source
+      - ./data/inference:/data/inference
+      - ./case_config:/config
+
+  classifier:
+    build: ./case-classifier
+    container_name: case-classifier
+    ports:
+      - 20002:100
+    networks:
+      - case-net
+    volumes:
+      - ./data/classifier:/data/classifier
+      - ./case_config:/config
+
+  solr-initializer:
+    image: alpine
+    container_name: case-solr-initializer
+    restart: "no"
+    entrypoint: |
+      /bin/sh -c "chown 8983:8983 /solr"
+    networks:
+      - case-net
+    volumes:
+      - ./db/data/solr:/solr
+
+  solr:
+    image: solr:9.6.1
+    container_name: case-solr
+    restart: always
+    volumes:
+      - ./db/data/solr:/var/solr
+      - ./solr_plugins/solr-ewb-jensen-shanon-distance-plugin/solr-js-plugin/target/solr-js-plugin-1.0.0.jar:/opt/solr/dist/plugins/solr-js-plugin-1.0.0.jar
+      - ./solr_plugins/solr-ewb-sims/solr-sims-plugin/target/solr-sims-plugin-1.0.0.jar:/opt/solr/dist/plugins/solr-sims-plugin-1.0.0.jar
+      - ./solr_config:/opt/solr/server/solr
+    ports:
+      - 20003:8983
+    entrypoint:
+      - docker-entrypoint.sh
+      - solr
+      - start
+      - -f
+      - -c
+      - -z
+      - zoo:2181
+      - -a
+      - "-Xdebug -Xrunjdwp:transport=dt_socket,server=y,suspend=n,address=1044 -Djute.maxbuffer=0x5000000"
+    networks:
+      - case-net
+
+  zoo:
+    image: zookeeper
+    container_name: case-zoo
+    restart: always
+    ports:
+      - 20004:8080
+      - 20005:2181
+    environment:
+      - JVMFLAGS=-Djute.maxbuffer=50000000
+    volumes:
+      - ./db/data/zoo/data:/data
+      - ./db/data/zoo/logs:/datalog
+    networks:
+      - case-net
+
+  solr_config:
+    build: ./solr_config
+    container_name: case-solr_config
+    ports:
+      - 20006:81
+    depends_on:
+      - solr
+      - zoo
+    networks:
+      - case-net
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./solr_config/bash_scripts:/bash_scripts
+      - ./db/data/solr:/db/data/solr
+    command:
+      - sh
+      - -c
+      - "chmod +x /bash_scripts/init_config.sh && ls /bash_scripts && bash_scripts/init_config.sh /db/data/solr/data"
