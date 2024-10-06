@@ -77,7 +77,7 @@ class Model(object):
 
         # Get model information from TMmodel
         self.tmmodel = TMmodel(self.path_to_model.joinpath("TMmodel"))
-        self.alphas, self.betas, self.thetas, self.vocab, self.sims, self.coords = self.tmmodel.get_model_info_for_vis()
+        self.alphas, self.betas, self.thetas, self.vocab, self.sims, self.coords, self.s3 = self.tmmodel.get_model_info_for_vis()
 
         return
 
@@ -189,7 +189,8 @@ class Model(object):
         # Keys for dodument-topic proportions and similarity that will be used within the corpus collection
         model_key = 'doctpc_' + self.name
         sim_model_key = 'sim_' + self.name
-
+        s3_model_key = 's3_' + self.name
+        
         # Get ids of documents kept in the tr corpus
         if tr_config["trainer"].lower() == "mallet":
             def process_line(line):
@@ -233,11 +234,37 @@ class Model(object):
                         rpr += "t" + str(idx) + "|" + str(val) + " "
                 rpr = rpr.rstrip()
                 return rpr
+            
+            def get_s3_str_rpr(vector):
+                """Calculates the s3 string representation.
+
+                Parameters
+                ----------
+                vector: numpy.array
+                    Array with the topic proportions of a document.
+                max_sum: int
+                    Maximum sum of the topic proportions.
+
+                Returns 
+                -------
+                rpr: str
+                    String representation of the document's topic proportions.
+                """
+                rpr = ""
+                for idx, val in enumerate(np.asarray(vector).flatten()):
+                    if val != 0:
+                        rpr += "t" + str(idx) + "|" + str(val) + " "
+                rpr = rpr.rstrip()
+                return rpr
 
             self._logger.info("Attaining thetas rpr...")
             thetas_dense = self.thetas.todense()
-            doc_tpc_rpr = [get_doc_str_rpr(thetas_dense[row, :], self.thetas_max_sum)
-                           for row in range(len(thetas_dense))]
+            doc_tpc_rpr = [get_doc_str_rpr(thetas_dense[row, :], self.thetas_max_sum) for row in range(len(thetas_dense))]
+            
+            self._logger.info("Attaining S3 rpr...")
+            s3_dense = self.s3.todense()
+            self._logger.info(f"Some s3_dense: {s3_dense[:5]}")
+            s3_rpr = [get_s3_str_rpr(s3_dense[row, :]) for row in range(len(s3_dense))]
 
             # Get similarities string representation
             self._logger.info("Attaining sims rpr...")
@@ -248,8 +275,7 @@ class Model(object):
                 "Thetas and sims attained. Creating dataframe...")
 
             # Save the information in a dataframe
-            df = pd.DataFrame(list(zip(ids_corpus, doc_tpc_rpr, sim_rpr)),
-                              columns=['id', model_key, sim_model_key])
+            df = pd.DataFrame(list(zip(ids_corpus, doc_tpc_rpr, sim_rpr,s3_rpr)), columns=['id', model_key, sim_model_key,s3_model_key])
             self._logger.info(
                 f"Dataframe created. Printing columns:{df.columns.tolist()}")
 
@@ -257,8 +283,7 @@ class Model(object):
             doc_tpc_rpr = ["" for _ in range(len(ids_corpus))]
             sim_rpr = doc_tpc_rpr
             # Save the information in a dataframe
-            df = pd.DataFrame(list(zip(ids_corpus, doc_tpc_rpr, sim_rpr)),
-                              columns=['id', model_key, sim_model_key])
+            df = pd.DataFrame(list(zip(ids_corpus, doc_tpc_rpr, sim_rpr, s3_rpr)), columns=['id', model_key, sim_model_key,s3_model_key])
 
         # Create json from dataframe
         json_str = df.to_json(orient='records')
@@ -272,6 +297,8 @@ class Model(object):
                 d[model_key] = tpc_dict
                 sim_dict = {'set': d[sim_model_key]}
                 d[sim_model_key] = sim_dict
+                s3_dict = {'set': d[s3_model_key]}
+                d[s3_model_key] = s3_dict
                 new_list.append(d)
         elif action == 'remove':
             for d in json_lst:
@@ -279,6 +306,8 @@ class Model(object):
                 d[model_key] = tpc_dict
                 sim_dict = {'set': []}
                 d[sim_model_key] = sim_dict
+                s3_dict = {'set': []}
+                d[s3_model_key] = s3_dict
                 new_list.append(d)
 
         return new_list, self.corpus_name
@@ -305,7 +334,9 @@ class Model(object):
 
         json_lst = [{"id": id,
                     "fields": {action: ['doctpc_' + self.name,
-                                        'sim_' + self.name]},
+                                        'sim_' + self.name,
+                                        's3_' + self.name
+                                        ]},
                      "models": {action: self.name}
                      }]
 

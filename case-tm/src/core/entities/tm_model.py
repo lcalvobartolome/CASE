@@ -37,6 +37,7 @@ class TMmodel(object):
 
     _betas = None
     _thetas = None
+    _s3 = None
     _alphas = None
     _edits = None  # Store all editions made to the model
     _ntopics = None
@@ -302,6 +303,11 @@ class TMmodel(object):
                 self._TMfolder.joinpath('thetas.npz'))
             self._ntopics = self._thetas.shape[1]
             # self._ndocs_active = np.array((self._thetas != 0).sum(0).tolist()[0])
+            
+    def _load_s3(self):
+        if self._s3 is None:
+            self._s3 = sparse.load_npz(
+                self._TMfolder.joinpath('s3.npz'))
 
     def _load_ndocs_active(self):
         if self._ndocs_active is None:
@@ -482,11 +488,12 @@ class TMmodel(object):
         self._load_alphas()
         self._load_betas()
         self._load_thetas()
+        self._load_s3()
         self._load_vocab()
         self._load_sims()
         self.load_tpc_coords()
 
-        return self._alphas, self._betas, self._thetas, self._vocab, self._sims, self._coords
+        return self._alphas, self._betas, self._thetas, self._vocab, self._sims, self._coords, self._s3
 
     def get_tpc_word_descriptions(self, n_words=15, tfidf=True, tpc=None):
         """returns the chemical description of topics

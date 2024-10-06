@@ -2,8 +2,6 @@ version: "3.8"
 
 networks:
   case-net:
-    name: ml4ds_net
-    external: true
   #  driver: bridge
   #  ipam:
   #    driver: default
@@ -15,7 +13,7 @@ services:
     build: ./case-tm
     container_name: case-tm
     ports:
-      - 82:82
+      - 20000:82
     environment:
       SOLR_URL: http://solr:8983
       INFERENCE_URL: http://case-inferencer:90
@@ -33,7 +31,7 @@ services:
     build: ./case-inferencer
     container_name: case-inferencer
     ports:
-      - 90:90
+      - 20001:90
     networks:
       - case-net
     volumes:
@@ -45,7 +43,7 @@ services:
     build: ./case-classifier
     container_name: case-classifier
     ports:
-      - 100:100
+      - 20002:100
     networks:
       - case-net
     volumes:
@@ -73,7 +71,7 @@ services:
       - ./solr_plugins/solr-ewb-sims/solr-sims-plugin/target/solr-sims-plugin-1.0.0.jar:/opt/solr/dist/plugins/solr-sims-plugin-1.0.0.jar
       - ./solr_config:/opt/solr/server/solr
     ports:
-      - 8983:8983
+      - 20003:8983
     entrypoint:
       - docker-entrypoint.sh
       - solr
@@ -92,8 +90,8 @@ services:
     container_name: case-zoo
     restart: always
     ports:
-      - 2180:8080
-      - 2181:2181
+      - 20004:8080
+      - 20005:2181
     environment:
       - JVMFLAGS=-Djute.maxbuffer=50000000
     volumes:
@@ -106,7 +104,7 @@ services:
     build: ./solr_config
     container_name: case-solr_config
     ports:
-      - 81:81
+      - 20006:81
     depends_on:
       - solr
       - zoo

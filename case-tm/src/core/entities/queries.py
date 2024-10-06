@@ -125,10 +125,19 @@ class Queries(object):
         # http://localhost:8983/solr/cordis/select?indent=true&q.op=OR&q=%7B!term%20f%3D{model}%7Dt{topic_id}&useParams=
         # http://localhost:8983/solr/#/{corpus_collection}/query?q=*:*&q.op=OR&indent=true&fl=doctpc_{model_name},%20nwords_per_doc&sort=payload(doctpc_{model_name},t{topic_id})%20desc,%20nwords_per_doc%20desc&useParams=
         # ================================================================
+        """
         self.Q9 = {
             'q': '*:*',
             'sort': 'payload(doctpc_{},t{}) desc, nwords_per_doc desc',
             'fl': 'payload(doctpc_{},t{}), nwords_per_doc, id',
+            'start': '{}',
+            'rows': '{}'
+        }#doctpc_{}
+        """
+        self.Q9 = {
+            'q': '*:*',
+            'sort': 'payload(s3_{},t{}) desc, nwords_per_doc desc',
+            'fl': 'payload(s3_{},t{}), nwords_per_doc, id',
             'start': '{}',
             'rows': '{}'
         }#doctpc_{}

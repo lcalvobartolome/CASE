@@ -488,6 +488,7 @@ class CASESolrClient(SolrClient):
         # 5. Modify schema in corpus collection to add field for the doc-tpc distribution and the similarities associated with the model being indexed
         model_key = 'doctpc_' + model_name
         sim_model_key = 'sim_' + model_name
+        s3_model_key = 's3_' + model_name
         self.logger.info(
             f"-- -- Adding field {model_key} in {corpus_name} collection")
         _, err = self.add_field_to_schema(
@@ -496,6 +497,10 @@ class CASESolrClient(SolrClient):
             f"-- -- Adding field {sim_model_key} in {corpus_name} collection")
         _, err = self.add_field_to_schema(
             col_name=corpus_name, field_name=sim_model_key, field_type='VectorFloatField')
+        self.logger.info(
+            f"-- -- Adding field {s3_model_key} in {corpus_name} collection")
+        _, err = self.add_field_to_schema(
+            col_name=corpus_name, field_name=s3_model_key, field_type='VectorFloatField')
 
         # 6. Index doc-tpc information in corpus collection
         self.logger.info(
@@ -1281,10 +1286,10 @@ class CASESolrClient(SolrClient):
             return
 
         # 6. Return a dictionary with names more understandable to the end user
-        proportion_key = "payload(doctpc_{},t{})".format(model_name, topic_id)
+        proportion_key = "payload(s3_{},t{})".format(model_name, topic_id)
         for dict in results.docs:
             if proportion_key in dict.keys():
-                dict["topic_relevance"] = dict.pop(proportion_key)*0.1
+                dict["topic_relevance"] = dict.pop(proportion_key)*100
             dict["num_words_per_doc"] = dict.pop("nwords_per_doc")
 
         # 7. Get the topic's top words
