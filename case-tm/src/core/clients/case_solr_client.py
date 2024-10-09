@@ -1293,20 +1293,33 @@ class CASESolrClient(SolrClient):
             dict["num_words_per_doc"] = dict.pop("nwords_per_doc")
 
         # 7. Get the topic's top words
-        words, sc = self.do_Q10(
+        start, rows = self.custom_start_and_rows(start, None, model_name)
+        q10_results, sc = self.do_Q10(
             model_col=model_name,
-            start=topic_id,
-            rows=1,
+            start=start,
+            rows=rows,
             only_id=False)
         if sc != 200:
             self.logger.error(
                 f"-- -- Error executing query Q10 when using in Q9. Aborting operation...")
             return
+        self.logger.info(f"Thesse is the rows: {rows}")
+        self.logger.info("these are the results of q10")
+        self.logger.info(q10_results)
+        self.logger.info("this is the topic_id")
+        self.logger.info(topic_id)
+        
+        for topic in q10_results:
+            this_tpc_id = topic['id'].split('t')[1]
+            if this_tpc_id == topic_id:
+                words = topic['tpc_descriptions']
+                break
 
         dict_bow, sc = self.do_Q18(
             corpus_col=corpus_col,
             ids=",".join([d['id'] for d in results.docs]),
-            words=",".join(words[0]['tpc_descriptions'].split(", ")),
+            #words=",".join(words[0]['tpc_descriptions'].split(", ")),
+            words=",".join(words.split(", ")),
             start=start,
             rows=rows)
 
