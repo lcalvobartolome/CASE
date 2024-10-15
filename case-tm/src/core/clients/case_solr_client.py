@@ -671,7 +671,7 @@ class CASESolrClient(SolrClient):
         start : str
             Start parameter of the query.
         rows : str
-            Rows parameter of the query.
+            Rows parameter of th     e query.
         col : str
             Name of the collection.
 
@@ -684,14 +684,21 @@ class CASESolrClient(SolrClient):
         """
         if start is None:
             start = str(0)
+
+        self.logger.info(f"This is rows before processing: {rows}")
+
         if rows is None:
             numFound_dict, sc = self.do_Q3(col)
-            rows = str(numFound_dict['ndocs'])
-
-            if sc != 200:
+            
+            # Check if the query to get number of docs failed
+            if sc != 200 or not numFound_dict:
                 self.logger.error(
-                    f"-- -- Error executing query Q3. Aborting operation...")
-                return
+                    f"-- -- Error executing query Q3. Aborting operation, setting default value for rows.")
+                rows = "10"  # Set a default value for rows if do_Q3 fails (adjust as necessary)
+            else:
+                rows = str(numFound_dict['ndocs'])
+
+        self.logger.info(f"This is what is being returned: start={start}, rows={rows}")
 
         return start, rows
 
@@ -1249,6 +1256,8 @@ class CASESolrClient(SolrClient):
         sc : int
             The status code of the response.
         """
+        
+        self.logger.info(f"this is the rows: {rows}")
 
         # 0. Convert corpus and model names to lowercase
         corpus_col = corpus_col.lower()
@@ -1263,6 +1272,8 @@ class CASESolrClient(SolrClient):
             return
 
         # 3. Customize start and rows
+        if rows is None:
+            rows = "100"
         start, rows = self.custom_start_and_rows(start, rows, corpus_col)
         # We limit the maximum number of results since they are top-documnts
         # If more results are needed pagination should be used
@@ -1303,7 +1314,7 @@ class CASESolrClient(SolrClient):
             self.logger.error(
                 f"-- -- Error executing query Q10 when using in Q9. Aborting operation...")
             return
-        self.logger.info(f"Thesse is the rows: {rows}")
+        self.logger.info(f"These is the rows: {rows}")
         self.logger.info("these are the results of q10")
         self.logger.info(q10_results)
         self.logger.info("this is the topic_id")
@@ -1314,7 +1325,9 @@ class CASESolrClient(SolrClient):
             if this_tpc_id == topic_id:
                 words = topic['tpc_descriptions']
                 break
-
+        
+        self.logger.info(f"These are the words: {words}")
+        
         dict_bow, sc = self.do_Q18(
             corpus_col=corpus_col,
             ids=",".join([d['id'] for d in results.docs]),
@@ -1322,6 +1335,8 @@ class CASESolrClient(SolrClient):
             words=",".join(words.split(", ")),
             start=start,
             rows=rows)
+        
+        self.logger.info(f"These are the words 2: {words}")
 
         # 7. Merge results
         def replace_payload_keys(dictionary):
@@ -1335,6 +1350,11 @@ class CASESolrClient(SolrClient):
                 new_dict[new_key] = value
             return new_dict
 
+        self.logger.info(f"all ok until here")
+        
+        self.logger.info(f"this is the results: {results.docs}")
+        
+        """
         merged_tpcs = []
         for d1 in results.docs:
             id_value = d1['id']
@@ -1350,6 +1370,36 @@ class CASESolrClient(SolrClient):
             }
 
             merged_tpcs.append(new_dict)
+        """
+        
+        merged_tpcs = []
+        try:
+            for d1 in results.docs:
+                id_value = d1['id']
+                
+                # Try to find the corresponding dictionary in dict_bow, return None if not found
+                d2 = next((item for item in dict_bow if item["id"] == id_value), None)
+                
+                # If d2 is None, log a warning and skip this entry
+                if d2 is None:
+                    self.logger.warning(f"No match found in dict_bow for id: {id_value}")
+                    continue
+                
+                # Create the new dictionary with safe lookups
+                new_dict = {
+                    "id": id_value,
+                    "topic_relevance": d1.get("topic_relevance", 0),
+                    "num_words_per_doc": d1.get("num_words_per_doc", 0),
+                    # Only include keys in replace_payload_keys if they exist in d2
+                    "counts": replace_payload_keys({key: d2.get(key) for key in d2 if key.startswith("payload(bow,")})
+                }
+
+                merged_tpcs.append(new_dict)
+        except Exception as e:
+            self.logger.error(f"Error merging results: {e}")
+            return
+
+        self.logger.info(f"all ok until here 2")
 
         return merged_tpcs, sc
 

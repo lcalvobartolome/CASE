@@ -34,3 +34,10 @@ title_field=Title
 date_field=startDate
 EWBdisplayed=ProjectID,title,HostInstitutions
 SearcheableField=ProjectID,Title
+
+[cordis-config]
+id_field=projectID
+title_field=title
+date_field=startDate
+EWBdisplayed=title,objective,euroSciVocCode,date
+SearcheableField=title
