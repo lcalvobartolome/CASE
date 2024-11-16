@@ -1302,8 +1302,9 @@ class CASESolrClient(SolrClient):
         # 3. Customize start and rows
         if rows is None:
             rows = "100"
+            
         start, rows = self.custom_start_and_rows(start, rows, corpus_col)
-        # We limit the maximum number of results since they are top-documnts
+        # We limit the maximum number of results since they are top-documents
         # If more results are needed pagination should be used
         if int(rows) > 100:
             rows = "100"
@@ -1332,40 +1333,31 @@ class CASESolrClient(SolrClient):
             dict["num_words_per_doc"] = dict.pop("nwords_per_doc")
 
         # 7. Get the topic's top words
-        start, rows = self.custom_start_and_rows(start, None, model_name)
+        start_model, rows_model = self.custom_start_and_rows(start, None, model_name)
         q10_results, sc = self.do_Q10(
             model_col=model_name,
-            start=start,
-            rows=rows,
+            start=start_model,
+            rows=rows_model,
             only_id=False)
+        
         if sc != 200:
             self.logger.error(
                 f"-- -- Error executing query Q10 when using in Q9. Aborting operation...")
             return
-        self.logger.info(f"These is the rows: {rows}")
-        self.logger.info("these are the results of q10")
-        self.logger.info(q10_results)
-        self.logger.info("this is the topic_id")
-        self.logger.info(topic_id)
         
         for topic in q10_results:
             this_tpc_id = topic['id'].split('t')[1]
             if this_tpc_id == topic_id:
                 words = topic['tpc_descriptions']
                 break
-        
-        self.logger.info(f"These are the words: {words}")
-        
+                
         dict_bow, sc = self.do_Q18(
             corpus_col=corpus_col,
             ids=",".join([d['id'] for d in results.docs]),
-            #words=",".join(words[0]['tpc_descriptions'].split(", ")),
             words=",".join(words.split(", ")),
             start=start,
             rows=rows)
         
-        self.logger.info(f"These are the words 2: {words}")
-
         # 7. Merge results
         def replace_payload_keys(dictionary):
             new_dict = {}
@@ -1377,28 +1369,6 @@ class CASESolrClient(SolrClient):
                     new_key = key
                 new_dict[new_key] = value
             return new_dict
-
-        self.logger.info(f"all ok until here")
-        
-        self.logger.info(f"this is the results: {results.docs}")
-        
-        """
-        merged_tpcs = []
-        for d1 in results.docs:
-            id_value = d1['id']
-         
-            # Find the corresponding dictionary in dict2
-            d2 = next(item for item in dict_bow if item["id"] == id_value)
-         
-            new_dict = {
-                "id": id_value,
-                "topic_relevance": d1.get("topic_relevance", 0),
-                "num_words_per_doc": d1.get("num_words_per_doc", 0),
-                "counts": replace_payload_keys({key: d2[key] for key in d2 if key.startswith("payload(bow,")})
-            }
-
-            merged_tpcs.append(new_dict)
-        """
         
         merged_tpcs = []
         try:
@@ -1426,8 +1396,6 @@ class CASESolrClient(SolrClient):
         except Exception as e:
             self.logger.error(f"Error merging results: {e}")
             return
-
-        self.logger.info(f"all ok until here 2")
 
         return merged_tpcs, sc
 
