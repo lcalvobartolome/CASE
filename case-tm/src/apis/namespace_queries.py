@@ -5,6 +5,7 @@ Author: Lorena Calvo-Bartolomé
 Date: 13/04/2023
 """
 
+import json
 from flask_restx import Namespace, Resource, reqparse
 from src.core.clients.case_solr_client import CASESolrClient
 
@@ -531,3 +532,439 @@ class getUserRelevantTopics(Resource):
                             user=user)
         except Exception as e:
             return str(e), 500
+        
+# ======================================================
+# RECOMMENDER SYSTEM QUERIES
+# ======================================================
+
+# ------------------------------------------------------
+# getTopicStatistics
+# ------------------------------------------------------
+# corpus_collection, model_name, topic_id
+getTopicStatistics_parser = reqparse.RequestParser()
+getTopicStatistics_parser.add_argument(
+    'corpus_collection', help='Name of the corpus collection', required=True)
+getTopicStatistics_parser.add_argument(
+    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+getTopicStatistics_parser.add_argument(
+    'topic_id', help='ID of the topic whose statistics are being searched', required=True)
+@api.route('/getTopicStatistics/')
+class getTopicStatistics(Resource):
+    @api.doc(parser=getTopicStatistics_parser)
+    def get(self):
+        args = getTopicStatistics_parser.parse_args()
+        corpus_collection = args['corpus_collection']
+        model_name = args['model_name']
+        topic_id = args['topic_id']
+
+        try:
+            with open("/case-tm/src/apis/dummies/getTopicStatistics.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getTopicTopResearchers
+# ------------------------------------------------------
+# corpus_collection, model_name, topic_id, start, rows
+getTopicTopResearchers_parser = reqparse.RequestParser()
+getTopicTopResearchers_parser.add_argument(
+    'corpus_collection', help='Name of the corpus collection', required=True)
+getTopicTopResearchers_parser.add_argument(
+    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+getTopicTopResearchers_parser.add_argument(
+    'topic_id', help="ID of the topic whose top researchers are being searched", required=True)
+getTopicTopResearchers_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getTopicTopResearchers_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getTopicTopResearchers/')
+class getTopicTopResearchers(Resource):
+    @api.doc(parser=getTopicTopResearchers_parser)
+    def get(self):
+        args = getTopicTopResearchers_parser.parse_args()
+        corpus_collection = args['corpus_collection']
+        model_name = args['model_name']
+        topic_id = args['topic_id']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getTopicTopResearchers.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+        
+# ------------------------------------------------------
+# getTopicTopRGs
+# ------------------------------------------------------
+# similar tp getTopicTopResearchers, but for Research Groups
+getTopicTopRGs_parser = reqparse.RequestParser()
+getTopicTopRGs_parser.add_argument(
+    'corpus_collection', help='Name of the corpus collection', required=True)
+getTopicTopRGs_parser.add_argument(
+    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+getTopicTopRGs_parser.add_argument(
+    'topic_id', help="ID of the topic whose top research groups are being searched", required=True)
+getTopicTopRGs_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getTopicTopRGs_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getTopicTopRGs/')
+class getTopicTopRGs(Resource):
+    @api.doc(parser=getTopicTopRGs_parser)
+    def get(self):
+        args = getTopicTopRGs_parser.parse_args()
+        corpus_collection = args['corpus_collection']
+        model_name = args['model_name']
+        topic_id = args['topic_id']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getTopicTopRGs.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getMetadataAGByID
+# ------------------------------------------------------
+getMetadataAGByID_parser = reqparse.RequestParser()
+getMetadataAGByID_parser.add_argument(
+    'aggregated_collection_name', help='Name of the aggregated collection', required=False)
+getMetadataAGByID_parser.add_argument(
+    'id', help='ID of the aggregated collection', required=False)
+@api.route('/getMetadataAGByID/')
+class getMetadataAGByID(Resource):
+    @api.doc(parser=getMetadataAGByID_parser)
+    def get(self):
+        args = getMetadataAGByID_parser.parse_args()
+        ag_collection = args['aggregated_collection_name']
+        id = args['id']
+        
+        # one of the two must be provided
+        if not ag_collection and not id:
+            return {"error": "One of the two parameters must be provided"}, 400
+        
+        try:
+            # @ TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getMetadataAGByID.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getTopicEvolution
+# ------------------------------------------------------
+# corpus_collection, model_name, topic_id
+getTopicEvolution_parser = reqparse.RequestParser()
+getTopicEvolution_parser.add_argument(
+    'corpus_collection', help='Name of the corpus collection', required=True)
+getTopicEvolution_parser.add_argument(
+    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+getTopicEvolution_parser.add_argument(
+    'topic_id', help='ID of the topic whose evolution is being searched', required=True)
+getTopicEvolution_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getTopicEvolution_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getTopicEvolution/')
+class getTopicEvolution(Resource):
+    @api.doc(parser=getTopicEvolution_parser)
+    def get(self):
+        args = getTopicEvolution_parser.parse_args()
+        corpus_collection = args['corpus_collection']
+        model_name = args['model_name']
+        topic_id = args['topic_id']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getTopicEvolution.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+        
+# ------------------------------------------------------
+# getAGDocsWithString
+# ------------------------------------------------------
+getAGDocsWithString_parser = reqparse.RequestParser()
+getAGDocsWithString_parser.add_argument(
+    'aggregated_collection_name', help='Name of the aggregated collection', required=False)
+getAGDocsWithString_parser.add_argument(
+    'string', help='String to be search in the SearcheableField field', required=False)
+getAGDocsWithString_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getAGDocsWithString_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getAGDocsWithString/')
+class getAGDocsWithString(Resource):
+    @api.doc(parser=getAGDocsWithString_parser)
+    def get(self):
+        args = getAGDocsWithString_parser.parse_args()
+        ag_collection = args['aggregated_collection_name']
+        string = args['string']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getAGDocsWithString.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getSimiliarityCriteriaList
+# ------------------------------------------------------
+@api.route('/getSimiliarityCriteriaList/')
+class getSimiliarityCriteriaList(Resource):
+    def get(self):
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getSimiliarityCriteriaList.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getResearchersSimilarToCall
+# ------------------------------------------------------
+# IdCall, SimilarityMethod, [filtering options, ranking options]
+# IdCall comes from FundingCallsHE --> id
+getResearchersSimilarToCall_parser = reqparse.RequestParser()
+getResearchersSimilarToCall_parser.add_argument(
+    'id', help='ID of the call', required=True)
+getResearchersSimilarToCall_parser.add_argument(
+    'similarity_method', help='Similarity method to be used', required=True)
+getResearchersSimilarToCall_parser.add_argument(
+    'filtering_options', help='Filtering options', required=False)
+getResearchersSimilarToCall_parser.add_argument(
+    'ranking_options', help='Ranking options', required=False)
+getResearchersSimilarToCall_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getResearchersSimilarToCall_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getResearchersSimilarToCall/')
+class getResearchersSimilarToCall(Resource):
+    @api.doc(parser=getResearchersSimilarToCall_parser)
+    def get(self):
+        args = getResearchersSimilarToCall_parser.parse_args()
+        id = args['id']
+        similarity_method = args['similarity_method']
+        filtering_options = args['filtering_options']
+        ranking_options = args['ranking_options']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            # check that similarity_method is valid
+            with open("/case-tm/src/apis/dummies/getResearchersSimilarToCall.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getResearchGroupsSimilarToCall
+# ------------------------------------------------------
+getResearchGroupsSimilarToCall_parser = reqparse.RequestParser()
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'id', help='ID of the call', required=True)
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'similarity_method', help='Similarity method to be used', required=True)
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'filtering_options', help='Filtering options', required=False)
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'ranking_options', help='Ranking options', required=False)
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getResearchGroupsSimilarToCall_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getResearchGroupsSimilarToCall/')
+class getResearchGroupsSimilarToCall(Resource):
+    @api.doc(parser=getResearchGroupsSimilarToCall_parser)
+    def get(self):
+        args = getResearchGroupsSimilarToCall_parser.parse_args()
+        id = args['id']
+        similarity_method = args['similarity_method']
+        filtering_options = args['filtering_options']
+        ranking_options = args['ranking_options']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            # check that similarity_method is valid
+            with open("/case-tm/src/apis/dummies/getResearchGroupsSimilarToCall.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getResearchersSimilarToText
+# ------------------------------------------------------
+getResearchersSimilarToText_parser = reqparse.RequestParser()
+getResearchersSimilarToText_parser.add_argument(
+    'text', help='Text to be inferred', required=True)
+getResearchersSimilarToText_parser.add_argument(
+    'similarity_method', help='Similarity method to be used', required=True)
+getResearchersSimilarToText_parser.add_argument(
+    'filtering_options', help='Filtering options', required=False)
+getResearchersSimilarToText_parser.add_argument(
+    'ranking_options', help='Ranking options', required=False)
+getResearchersSimilarToText_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getResearchersSimilarToText_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getResearchersSimilarToText/')
+class getResearchersSimilarToText(Resource):
+    @api.doc(parser=getResearchersSimilarToText_parser)
+    def get(self):
+        args = getResearchersSimilarToText_parser.parse_args()
+        text = args['text']
+        similarity_method = args['similarity_method']
+        filtering_options = args['filtering_options']
+        ranking_options = args['ranking_options']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            # check that similarity_method is valid
+            with open("/case-tm/src/apis/dummies/getResearchersSimilarToText.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getResearchGroupsSimilarToText
+# ------------------------------------------------------
+getResearchGroupsSimilarToText_parser = reqparse.RequestParser()
+getResearchGroupsSimilarToText_parser.add_argument(
+    'text', help='Text to be inferred', required=True)
+getResearchGroupsSimilarToText_parser.add_argument(
+    'similarity_method', help='Similarity method to be used', required=True)
+getResearchGroupsSimilarToText_parser.add_argument(
+    'filtering_options', help='Filtering options', required=False)
+getResearchGroupsSimilarToText_parser.add_argument(
+    'ranking_options', help='Ranking options', required=False)
+getResearchGroupsSimilarToText_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getResearchGroupsSimilarToText_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getResearchGroupsSimilarToText/')
+class getResearchGroupsSimilarToText(Resource):
+    @api.doc(parser=getResearchGroupsSimilarToText_parser)
+    def get(self):
+        args = getResearchGroupsSimilarToText_parser.parse_args()
+        text = args['text']
+        similarity_method = args['similarity_method']
+        filtering_options = args['filtering_options']
+        ranking_options = args['ranking_options']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            # check that similarity_method is valid
+            with open("/case-tm/src/apis/dummies/getResearchGroupsSimilarToText.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getCallsSimilarToResearcher
+# ------------------------------------------------------
+# invID, SimilarityMethod, collection_name (funding_calls)
+getCallsSimilarToResearcher_parser = reqparse.RequestParser()
+getCallsSimilarToResearcher_parser.add_argument(
+    'id', help='ID of the researcher', required=True)
+getCallsSimilarToResearcher_parser.add_argument(
+    'similarity_method', help='Similarity method to be used', required=True)
+getCallsSimilarToResearcher_parser.add_argument(
+    'collection_name', help='Name of the collection', required=True)
+getCallsSimilarToResearcher_parser.add_argument(
+    'filtering_options', help='Filtering options', required=False)
+getCallsSimilarToResearcher_parser.add_argument(
+    'ranking_options', help='Ranking options', required=False)
+getCallsSimilarToResearcher_parser.add_argument(
+    'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
+getCallsSimilarToResearcher_parser.add_argument(
+    'rows', help='Controls how many rows of responses are displayed at a time (default value: maximum number of docs in the collection)', required=False)
+
+@api.route('/getCallsSimilarToResearcher/')
+class getCallsSimilarToResearcher(Resource):
+    @api.doc(parser=getCallsSimilarToResearcher_parser)
+    def get(self):
+        args = getCallsSimilarToResearcher_parser.parse_args()
+        id = args['id']
+        similarity_method = args['similarity_method']
+        collection_name = args['collection_name']
+        filtering_options = args['filtering_options']
+        ranking_options = args['ranking_options']
+        start = args['start']
+        rows = args['rows']
+        
+        try:
+            # @TODO: Implement this query
+            # check that similarity_method is valid
+            with open("/case-tm/src/apis/dummies/getCallsSimilarToResearcher.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500
+
+# ------------------------------------------------------
+# getThetasResearcherByID
+# ------------------------------------------------------
+# this needs to be called twice, once with papers, once with cordis.
+# model_name can be left empty (default model for the collection will be used)
+# invID, corpus_collection, model_name
+getThetasResearcherByID_parser = reqparse.RequestParser()
+getThetasResearcherByID_parser.add_argument(
+    'id', help='ID of the researcher', required=True)
+getThetasResearcherByID_parser.add_argument(
+    'corpus_collection', help='Name of the corpus collection', required=True)
+getThetasResearcherByID_parser.add_argument(
+    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=False)
+
+@api.route('/getThetasResearcherByID/')
+class getThetasResearcherByID(Resource):
+    @api.doc(parser=getThetasResearcherByID_parser)
+    def get(self):
+        args = getThetasResearcherByID_parser.parse_args()
+        id = args['id']
+        corpus_collection = args['corpus_collection']
+        model_name = args['model_name']
+        
+        try:
+            # @TODO: Implement this query
+            with open("/case-tm/src/apis/dummies/getThetasResearcherByID.json", "r") as file:
+                data = json.load(file)
+            return data, 200
+        except Exception as e:
+            return {"error": str(e)}, 500

@@ -1,0 +1,68 @@
+[
+    {
+        "id": "632506",
+        "topic_relevance": 16.22893,
+        "num_words_per_researcher": 165,
+        "counts": {
+            "sensor": 12,
+            "mobile": 0,
+            "automatic": 0,
+            "video": 0,
+            "detection": 0,
+            "camera": 0,
+            "smartphone": 0,
+            "maintenance": 0,
+            "artificial_intelligence": 0,
+            "personal": 0,
+            "accuracy": 0,
+            "wearable": 0,
+            "home": 0,
+            "manual": 0,
+            "payment": 0
+        }
+    },
+    {
+        "id": "632507",
+        "topic_relevance": 12.54389,
+        "num_words_per_researcher": 140,
+        "counts": {
+            "sensor": 10,
+            "mobile": 3,
+            "automatic": 1,
+            "video": 2,
+            "detection": 4,
+            "camera": 1,
+            "smartphone": 0,
+            "maintenance": 0,
+            "artificial_intelligence": 2,
+            "personal": 1,
+            "accuracy": 3,
+            "wearable": 1,
+            "home": 0,
+            "manual": 0,
+            "payment": 0
+        }
+    },
+    {
+        "id": "632508",
+        "topic_relevance": 19.33421,
+        "num_words_per_researcher": 180,
+        "counts": {
+            "sensor": 15,
+            "mobile": 1,
+            "automatic": 3,
+            "video": 5,
+            "detection": 2,
+            "camera": 0,
+            "smartphone": 4,
+            "maintenance": 1,
+            "artificial_intelligence": 5,
+            "personal": 2,
+            "accuracy": 4,
+            "wearable": 0,
+            "home": 1,
+            "manual": 1,
+            "payment": 0
+        }
+    }
+]

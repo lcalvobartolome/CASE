@@ -1,0 +1,68 @@
+[
+    {
+        "id": "ML4DS",
+        "topic_relevance": 14.87654,
+        "num_words_per_rg": 165,
+        "counts": {
+            "neural_networks": 10,
+            "support_vector_machines": 8,
+            "random_forest": 6,
+            "gradient_boosting": 7,
+            "clustering_algorithms": 5,
+            "dimensionality_reduction": 4,
+            "hyperparameter_tuning": 3,
+            "model_optimization": 2,
+            "ensemble_methods": 1,
+            "decision_trees": 5,
+            "regression_analysis": 2,
+            "deep_learning": 6,
+            "health_monitoring": 3,
+            "telemedicine": 2,
+            "anomaly_detection": 4
+        }
+    },
+    {
+        "id": "BSEL",
+        "topic_relevance": 17.65432,
+        "num_words_per_rg": 140,
+        "counts": {
+            "neural_networks": 5,
+            "support_vector_machines": 4,
+            "random_forest": 3,
+            "gradient_boosting": 2,
+            "clustering_algorithms": 2,
+            "dimensionality_reduction": 2,
+            "hyperparameter_tuning": 1,
+            "model_optimization": 1,
+            "ensemble_methods": 0,
+            "decision_trees": 2,
+            "regression_analysis": 3,
+            "deep_learning": 4,
+            "health_monitoring": 20,
+            "telemedicine": 15,
+            "anomaly_detection": 12
+        }
+    },
+    {
+        "id": "GIAA",
+        "topic_relevance": 13.90876,
+        "num_words_per_rg": 180,
+        "counts": {
+            "neural_networks": 8,
+            "support_vector_machines": 6,
+            "random_forest": 5,
+            "gradient_boosting": 4,
+            "clustering_algorithms": 3,
+            "dimensionality_reduction": 3,
+            "hyperparameter_tuning": 2,
+            "model_optimization": 1,
+            "ensemble_methods": 1,
+            "decision_trees": 3,
+            "regression_analysis": 2,
+            "deep_learning": 5,
+            "health_monitoring": 5,
+            "telemedicine": 3,
+            "anomaly_detection": 4
+        }
+    }
+]

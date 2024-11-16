@@ -659,6 +659,34 @@ class CASESolrClient(SolrClient):
         self.index_documents(new_json, model_col, self.batch_size)
 
         return
+    
+    # ======================================================
+    # AGGREGATED CORPORA FUNCTIONS
+    # ======================================================
+    def index_aggregated_corpus(self, agg_corpus_name: str, agg_corpus_type: str) -> None:
+        # @TODO: Implement this method
+        return
+    
+    def delete_aggregated_corpus(self, agg_corpus_name: str) -> None:
+        # @TODO: Implement this method
+        return
+    
+    def list_aggregated_corpora(self) -> list[str]:
+        # @TODO: Implement this method
+        # create temporal dummy to avoid error
+        return [
+            {
+                "id": "0",
+                "name": "uc3m_researchers",
+                "type": "researcher"
+                
+            },
+            {   
+                "id": "1",
+                "name": "uc3m_research_groups",
+                "type": "research_group"
+            }
+        ]
 
     # ======================================================
     # AUXILIARY FUNCTIONS
