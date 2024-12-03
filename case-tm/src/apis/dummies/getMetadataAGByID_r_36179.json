@@ -1,0 +1,19 @@
+{
+    "id": 36179,
+    "Name": "Vanessa Gómez-Verdejo",
+    "Category": "Full Professor",
+    "Email": "jcid@ing.uc3m.es",
+    "Campus": "Leganés", 
+    "ORCID": "0000-0001-7702-8747",
+    "Scopus": 10143920100,
+    "Department": "Signal Theory and Communications",
+    "ResearchGroup": "Machine Learning for Data Science (ML4DS)",
+    "Subjects": ["Biology and Biomedicine", "Computer Science", "Medicine", "Telecommunications"],
+    "UC3MYears": [2004, 2006],
+    "nPI": 7,
+    "nProjects": 21,
+    "nPapers": 64,
+    "researchItems_cordis": ["550006", "544746", "546885"],
+    "researchItems_aei":  ["555525", "539453", "546555"],
+    "researchItems_SciPapers": ["566692", "561136", "560939", "556255", "556254"]
+}

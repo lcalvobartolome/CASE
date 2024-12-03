@@ -1,0 +1,19 @@
+{
+    "id": 22404, 
+    "Name": "Pablo Serrano Yañez-Mingot",
+    "Category": "Associate Professor",
+    "Email": "pablo@it.uc3m.es",
+    "Campus": "Leganés", 
+    "ORCID": "0000-0002-5176-0013",
+    "Scopus": 13104336600,
+    "Department": "Telematic Engineering",
+    "ResearchGroup": "Network Technologies",
+    "Subjects": ["Computer Science", "Education", "Telecommunications"],
+    "UC3MYears": [2003, 2007],
+    "nPI": 15,
+    "nProjects": 25,
+    "nPapers": 34,
+    "researchItems_cordis": ["544741"],
+    "researchItems_aei":  ["548868", "548859"],
+    "researchItems_SciPapers": ["560320", "560683", "547875", "560321", "560321", "554166"]
+}

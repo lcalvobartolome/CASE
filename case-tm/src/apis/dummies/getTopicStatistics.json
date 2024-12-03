@@ -1,6 +1,6 @@
 {
-    "alphas": 0.13775136,
-    "topic_entropy": 0.7283416,
-    "topic_coherence": 0.6606954,
-    "ndocs_active": 26901
+    "Size": 0.13775136,
+    "Specialization": 0.7283416,
+    "Coherence": 0.6606954,
+    "Trend": "-20.3%"
 }

@@ -1,0 +1,11 @@
+{
+    "id": 2231,
+    "Name": "Machine Learning for Data Science (ML4DS)",
+    "Director": "Vanessa Gómez-Verdejo",
+    "Research Lines": ["Adaptive Learning Algorithms", "Algorithms for document collection profiling", "Deep Learning"],
+    "Campus": "Leganés", 
+    "nProjects": 84,
+    "nPapers": 372,
+    "researchItems_cordis": ["XXX", "XXX", "XXX"],
+    "researchItems_aei":  ["XXX", "XXX", "XXX"]
+}

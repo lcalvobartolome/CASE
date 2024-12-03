@@ -1,0 +1,19 @@
+{
+    "id": 16921, 
+    "Name": "Jesús Cid-Sueiro",
+    "Category": "Full Professor",
+    "Email": "jcid@ing.uc3m.es",
+    "Campus": "Leganés", 
+    "ORCID": "0000-0002-5243-5992",
+    "Scopus": 6602583947,
+    "Department": "Signal Theory and Communications",
+    "ResearchGroup": "Machine Learning for Data Science (ML4DS)",
+    "Subjects": ["Computer Science", "Economics", "Education", "Telecommunications"],
+    "UC3MYears": [1998, 1998],
+    "nPI": 13,
+    "nProjects": 27,
+    "nPapers": 73,
+    "researchItems_cordis": ["550006", "544746", "546885"],
+    "researchItems_aei":  ["555525", "539453", "546555"],
+    "researchItems_SciPapers": ["552697", "530264", "482256", "455014"]
+}

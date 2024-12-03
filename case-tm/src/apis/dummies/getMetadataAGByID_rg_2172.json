@@ -1,0 +1,11 @@
+{
+    "id": 2172,
+    "Name": "Signal Processing and Learning Group (GTSA)",
+    "Director": "Antonio Artés-Rodríguez",
+    "Research Lines": ["Adaptive Learning Algorithms", "Algorithms for document collection profiling", "Deep Learning"],
+    "Campus": "Leganés", 
+    "nProjects": 124,
+    "nPapers": 422,
+    "researchItems_cordis": ["XXX", "XXX", "XXX"],
+    "researchItems_aei":  ["XXX", "XXX", "XXX"]
+}

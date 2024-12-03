@@ -6,6 +6,7 @@ Date: 13/04/2023
 """
 
 import json
+import pathlib
 from flask_restx import Namespace, Resource, reqparse
 from src.core.clients.case_solr_client import CASESolrClient
 
@@ -639,9 +640,9 @@ class getTopicTopRGs(Resource):
 # ------------------------------------------------------
 getMetadataAGByID_parser = reqparse.RequestParser()
 getMetadataAGByID_parser.add_argument(
-    'aggregated_collection_name', help='Name of the aggregated collection', required=False)
+    'aggregated_collection_name', help='Name of the aggregated collection (uc3m_researchers or uc3m_research_groups)', required=True)
 getMetadataAGByID_parser.add_argument(
-    'id', help='ID of the aggregated collection', required=False)
+    'id', help='ID of the aggregated collection', required=True)
 @api.route('/getMetadataAGByID/')
 class getMetadataAGByID(Resource):
     @api.doc(parser=getMetadataAGByID_parser)
@@ -654,9 +655,16 @@ class getMetadataAGByID(Resource):
         if not ag_collection and not id:
             return {"error": "One of the two parameters must be provided"}, 400
         
+        file_r = f"/case-tm/src/apis/dummies/getMetadataAGByID_r_{id}.json"
+        file_rg = f"/case-tm/src/apis/dummies/getMetadataAGByID_rg_{id}.json"
+        
+        # one of the two files must exist
+        if ag_collection.lower() == "uc3m_researchers":
+            file = file_r
+        elif ag_collection.lower() == "uc3m_research_groups":
+            file = file_rg
         try:
-            # @ TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getMetadataAGByID.json", "r") as file:
+            with open(file, "r") as file:
                 data = json.load(file)
             return data, 200
         except Exception as e:
@@ -670,7 +678,7 @@ getTopicEvolution_parser = reqparse.RequestParser()
 getTopicEvolution_parser.add_argument(
     'corpus_collection', help='Name of the corpus collection', required=True)
 getTopicEvolution_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 getTopicEvolution_parser.add_argument(
     'topic_id', help='ID of the topic whose evolution is being searched', required=True)
 getTopicEvolution_parser.add_argument(

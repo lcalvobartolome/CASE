@@ -1,0 +1,19 @@
+{
+    "id": 34318, 
+    "Name": "Jerónimo Arenas-García", 
+    "Category": "Full Professor",
+    "Email": "jarenas@ing.uc3m.es",
+    "Campus": "Leganés", 
+    "ORCID": "0000-0003-4071-7068",
+    "Scopus": 6506540366,
+    "Department": "Signal Theory and Communications",
+    "ResearchGroup": "Machine Learning for Data Science (ML4DS)",
+    "Subjects": ["Computer Science", "Electronics", "Telecommunications"],
+    "UC3MYears": [2002, 2004],
+    "nPI": 19,
+    "nProjects": 21,
+    "nPapers": 52,
+    "researchItems_cordis": ["550006", "544746", "546885"],
+    "researchItems_aei":  ["555525", "539453", "546555"],
+    "researchItems_SciPapers": ["552697", "489751", "480201"]
+}
