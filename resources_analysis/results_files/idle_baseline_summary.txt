@@ -1,0 +1,6 @@
+Solr CPU Usage: 0.80% ± 0.05%
+Solr Memory Usage: 1610.61 MB ± 0.00 MB
+TM CPU Usage: 0.79% ± 0.14%
+TM Memory Usage: 3898.75 MB ± 0.00 MB
+Total CPU Usage: 1.59% ± 0.15%
+Total Memory Usage: 5509.36 MB ± 0.00 MB

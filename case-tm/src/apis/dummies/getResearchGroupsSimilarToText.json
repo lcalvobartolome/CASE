@@ -1,42 +1,72 @@
 [
     {
-        "id": "2172",
-        "score": 99.8003992015968
+        "id": "2242",
+        "score": 86.51951097804391,
+        "Name": "Optoelectronics and Laser Technology Group (GOTL)",
+        "nProjects": 48,
+        "nPapers": 210
     },
     {
         "id": "2231",
-        "score": 98.53379740518962
-    },
-    {
-        "id": "2242",
-        "score": 86.51951097804391
-    },
-    {
-        "id": "2172",
-        "score": 80.02906586826347
-    },
-    {
-        "id": "2231",
-        "score": 78.11877245508981
-    },
-    {
-        "id": "2242",
-        "score": 74.61137325349301
+        "score": 98.53379740518962,
+        "Name": "Machine Learning for Data Science (ML4DS)",
+        "nProjects": 84,
+        "nPapers": 372
     },
     {
         "id": "2172",
-        "score": 74.38672654690619
+        "score": 99.8003992015968,
+        "Name": "Signal Processing and Learning Group (GTSA)",
+        "nProjects": 124,
+        "nPapers": 422
+    },
+    {
+        "id": "2242",
+        "score": 86.51951097804391,
+        "Name": "Optoelectronics and Laser Technology Group (GOTL)",
+        "nProjects": 48,
+        "nPapers": 210
     },
     {
         "id": "2231",
-        "score": 71.7564630738523
+        "score": 98.53379740518962,
+        "Name": "Machine Learning for Data Science (ML4DS)",
+        "nProjects": 84,
+        "nPapers": 372
+    },
+    {
+        "id": "2172",
+        "score": 99.8003992015968,
+        "Name": "Signal Processing and Learning Group (GTSA)",
+        "nProjects": 124,
+        "nPapers": 422
     },
     {
         "id": "2242",
-        "score": 71.19904191616766
+        "score": 86.51951097804391,
+        "Name": "Optoelectronics and Laser Technology Group (GOTL)",
+        "nProjects": 48,
+        "nPapers": 210
+    },
+    {
+        "id": "2231",
+        "score": 98.53379740518962,
+        "Name": "Machine Learning for Data Science (ML4DS)",
+        "nProjects": 84,
+        "nPapers": 372
+    },
+    {
+        "id": "2172",
+        "score": 99.8003992015968,
+        "Name": "Signal Processing and Learning Group (GTSA)",
+        "nProjects": 124,
+        "nPapers": 422
     },
     {
         "id": "2242",
-        "score": 70.10270858283432
+        "score": 70.10270858283432,
+        "Name": "Optoelectronics and Laser Technology Group (GOTL)",
+        "nProjects": 48,
+        "nPapers": 210
     }
 ]

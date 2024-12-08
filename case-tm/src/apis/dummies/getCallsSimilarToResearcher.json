@@ -1,42 +1,62 @@
 [
     {
         "id": "1",
-        "score": 99.8003992015968
+        "score": 99.8003992015968,
+        "name": "HORIZON-CL2-2024-DEMOCRACY-01-03: What is the long-term impact of rule of law and other European values on socio-economic outcomes?",
+        "deadline": "9999-12-31"
     },
     {
         "id": "610",
-        "score": 98.53379740518962
+        "score": 98.53379740518962,
+        "name": "HORIZON-CL2-2023-HERITAGE-01-03: Re-visiting the digitisation of cultural heritage: What, how and why?",
+        "deadline": "9999-12-31"
     },
     {
         "id": "680",
-        "score": 86.51951097804391
+        "score": 86.51951097804391,
+        "name": "HORIZON-CL2-2023-HERITAGE-01-04: Cultural heritage in transformation – facing change with confidence",
+        "deadline": "9999-12-31"
     },
     {
         "id": "275",
-        "score": 80.02906586826347
+        "score": 80.02906586826347,
+        "name": "HORIZON-CL2-2023-HERITAGE-ECCCH-01-01: A European Collaborative Cloud for Cultural Heritage",
+        "deadline": "9999-12-31"
     },
     {
         "id": "143",
-        "score": 78.11877245508981
+        "score": 78.11877245508981,
+        "name": "HORIZON-CL5-2023-D1-01-04: Improved knowledge in cloud-aerosol interaction",
+        "deadline": "9999-12-31"
     },
     {
         "id": "35",
-        "score": 74.61137325349301
+        "score": 74.61137325349301,
+        "name": "HORIZON-CL5-2023-D1-01-05: Science for successful, high-integrity voluntary climate initiatives",
+        "deadline": "9999-12-31"
     },
     {
         "id": "473",
-        "score": 74.38672654690619
+        "score": 74.38672654690619,
+        "name": "HORIZON-CL5-2023-D1-01-11: Needs-based adaptation to climate change in Africa",
+        "deadline": "9999-12-31"
     },
     {
         "id": "125",
-        "score": 71.7564630738523
+        "score": 71.7564630738523,
+        "name": "HORIZON-CL5-2023-D1-02-01: EU-China international cooperation on data and model development for pathways to carbon neutrality: focusing on decarbonisation, energy efficiency and socio-economic implications of the transition",
+        "deadline": "9999-12-31"
     },
     {
         "id": "363",
-        "score": 71.19904191616766
+        "score": 71.19904191616766,
+        "name": "HORIZON-CL5-2023-D1-02-02: EU-China international cooperation on blue carbon",
+        "deadline": "9999-12-31"
     },
     {
         "id": "358",
-        "score": 70.10270858283432
+        "score": 70.10270858283432,
+        "name": "HORIZON-CL5-2024-D1-01-01: Enhanced quantification and understanding of natural and anthropogenic methane emissions and sinks",
+        "deadline": "9999-12-31"
     }
 ]

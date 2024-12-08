@@ -41,3 +41,17 @@ title_field=title
 date_field=startDate
 EWBdisplayed=title,objective,euroSciVocCode,date
 SearcheableField=title
+
+[oa_kwds3_ai_-config]
+id_field=id
+title_field=title
+date_field=year
+EWBdisplayed=title,date
+SearcheableField=title
+
+[oa_cancer_-config]
+id_field=id
+title_field=title
+date_field=year
+EWBdisplayed=title,date
+SearcheableField=title

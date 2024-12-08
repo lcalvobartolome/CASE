@@ -1,42 +1,82 @@
 [
     {
-        "id": "632506",
-        "score": 99.8003992015968
+        "id": "36179",
+        "score": 78.11877245508981,
+        "Name": "Vanessa Gómez-Verdejo",
+        "nPI": 7,
+        "nProjects": 21,
+        "nPapers": 64
     },
     {
-        "id": "632507",
-        "score": 98.53379740518962
+        "id": "34318",
+        "score": 86.51951097804391, 
+        "Name": "Jerónimo Arenas-García", 
+        "nPI": 19,
+        "nProjects": 21,
+        "nPapers": 52
     },
     {
-        "id": "632939",
-        "score": 86.51951097804391
+        "id": "22404",
+        "score": 98.53379740518962, 
+        "Name": "Pablo Serrano Yañez-Mingot",
+        "nPI": 15,
+        "nProjects": 25,
+        "nPapers": 34
     },
     {
-        "id": "632880",
-        "score": 80.02906586826347
+        "id": "16921",
+        "score": 99.8003992015968,
+        "Name": "Jesús Cid-Sueiro",
+        "nPI": 13,
+        "nProjects": 27,
+        "nPapers": 73
     },
     {
-        "id": "632773",
-        "score": 78.11877245508981
+        "id": "35623",
+        "score": 80.02906586826347,
+        "Name": "Joaquín Má­guez-Arenas",
+        "nPI": 32,
+        "nProjects": 11,
+        "nPapers": 54
     },
     {
-        "id": "632983",
-        "score": 74.61137325349301
+        "id": "16921",
+        "score": 74.61137325349301,
+        "Name": "Jesús Cid-Sueiro",
+        "nPI": 13,
+        "nProjects": 27,
+        "nPapers": 73
     },
     {
-        "id": "632964",
-        "score": 74.38672654690619
+        "id": "22404",
+        "score": 74.38672654690619, 
+        "Name": "Pablo Serrano Yañez-Mingot",
+        "nPI": 15,
+        "nProjects": 25,
+        "nPapers": 34
     },
     {
-        "id": "632794",
-        "score": 71.7564630738523
+        "id": "34318",
+        "score": 71.7564630738523, 
+        "Name": "Jerónimo Arenas-García", 
+        "nPI": 19,
+        "nProjects": 21,
+        "nPapers": 52
     },
     {
-        "id": "632552",
-        "score": 71.19904191616766
+        "id": "35623",
+        "score": 71.19904191616766,
+        "Name": "Joaquín Má­guez-Arenas",
+        "nPI": 32,
+        "nProjects": 11,
+        "nPapers": 54
     },
     {
-        "id": "632998",
-        "score": 70.10270858283432
+        "id": "36179",
+        "score": 70.10270858283432,
+        "Name": "Vanessa Gómez-Verdejo",
+        "nPI": 7,
+        "nProjects": 21,
+        "nPapers": 64
     }
 ]
