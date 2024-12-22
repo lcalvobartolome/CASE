@@ -130,11 +130,15 @@ class Corpus(object):
         df = df.drop(['lemmas_'], axis=1)
         df['bow'] = df['bow'].apply(lambda x: ' '.join(
             [f'{word}|{count}' for word, count in x]).rstrip() if x else None)
+        
+        # extract just the year from the date and save as a new string column
+        df["year_str"] = df["date"].dt.year.fillna(0).astype(int).astype(str)
+        self._logger.info(f"this is the year_str: {df['year_str']}")
 
         # Convert dates information to the format required by Solr ( ISO_INSTANT, The ISO instant formatter that formats or parses an instant in UTC, such as '2011-12-03T10:15:30Z')
         df, cols = convert_datetime_to_strftime(df)
         df[cols] = df[cols].applymap(parseTimeINSTANT)
-
+        
         # Create SearcheableField by concatenating all the fields that are marked as SearcheableField in the config file
         df['SearcheableField'] = df[self.sercheable_field].apply(
             lambda x: ' '.join(x.astype(str)), axis=1)

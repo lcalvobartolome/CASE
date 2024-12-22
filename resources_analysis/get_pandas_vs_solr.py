@@ -1,6 +1,5 @@
 import subprocess
 import threading
-import time
 import requests
 import json
 import numpy as np
@@ -13,6 +12,10 @@ import pandas as pd
 import time
 import threading
 from scipy import sparse
+import subprocess
+import time
+import signal
+import os
 
 ##################
 # Pandas queries #
@@ -232,26 +235,28 @@ SOLR_BASE_URL = "http://kumo01:8983/solr"
 ##################
 # Solr queries   #
 ##################
+def parse_memory(x):
+    if "GiB" in str(x):
+        return float(x.split("GiB")[0])*1073.74
+    elif "MiB" in str(x):
+        return float(x.split("MiB")[0])
+    else:
+        return float(x)
+
 def extract_cpu_memory_usage(collection, i):
     # wait for the files to be written
     time.sleep(5)
     
     docker_data_tm_cpu = pd.read_csv(f'mondocker_files/tm_cpu_{collection}_{i}', names=['CPU Usage (%)'])
+    print(docker_data_tm_cpu)
     docker_data_solr_cpu = pd.read_csv(f'mondocker_files/solr_cpu_{collection}_{i}', names=['CPU Usage (%)'])
+    print(docker_data_solr_cpu)
 
     docker_data_tm_mem = pd.read_csv(f'mondocker_files/tm_mem_{collection}_{i}', names=['Memory Usage (MB)'])
-    try:
-        docker_data_tm_mem['Memory Usage (MB)'] = docker_data_tm_mem['Memory Usage (MB)'].apply(lambda x : float(x.split("GiB")[0])*1073.74)
-    except Exception as e:
-        print(e)
-        print("Data is given in MB")
+    docker_data_tm_mem['Memory Usage (MB)'] = docker_data_tm_mem['Memory Usage (MB)'].apply(lambda x: parse_memory(x))
     
     docker_data_solr_mem = pd.read_csv(f'mondocker_files/solr_mem_{collection}_{i}', names=['Memory Usage (MB)'])
-    try:
-        docker_data_solr_mem['Memory Usage (MB)'] = docker_data_solr_mem['Memory Usage (MB)'].apply(lambda x : float(x.split("GiB")[0])*1073.74)
-    except Exception as e:
-        print(e)
-        print("Data is given in MB")
+    docker_data_solr_mem['Memory Usage (MB)'] = docker_data_solr_mem['Memory Usage (MB)'].apply(lambda x: parse_memory(x))
 
     total_cpu_usage = docker_data_tm_cpu['CPU Usage (%)'] + docker_data_solr_cpu['CPU Usage (%)']
     total_mem_usage = docker_data_tm_mem['Memory Usage (MB)'] + docker_data_solr_mem['Memory Usage (MB)']
@@ -288,10 +293,13 @@ def execute_query_1(model_name, core_name, session, n_iter:int=10):
             "facet": {
             "years": {
                 "type": "range",
-                "field": "date",
-                "start": "2000-01-01T00:00:00Z",
-                "end": "2024-12-31T23:59:59Z",
-                "gap": "+1YEAR"
+                #"field": "date",
+                #"start": "2000-01-01T00:00:00Z",
+                #"end": "2024-12-31T23:59:59Z",
+                #"gap": "+1YEAR"
+                "type": "terms",
+                "field": "year_str",
+                "limit": -1,  # To include all years
             }
             }
         }
@@ -313,6 +321,7 @@ def execute_query_1(model_name, core_name, session, n_iter:int=10):
         if response.status_code == 200:
             result = response.json()
             facets = result.get('facets', {})
+            #print(f"Facets: {facets}")
         else:
             print(f"Failed to fetch data. HTTP Status code: {response.status_code}")
             facets = {}
@@ -344,17 +353,37 @@ def execute_query_2(model_name, core_name, session, n_iter:int=10):
                 "q": f"{model_name}:{topic}",
                 "facet": {
                     "years": {
-                        "type": "range",
-                        "field": "date",
-                        "start": "2000-01-01T00:00:00Z",
-                        "end": "2024-12-31T23:59:59Z",
-                        "gap": "+1YEAR",
+                        "type": "terms",
+                        "field": "year_str",
+                        "limit": -1,  # To include all years
                         "facet": {
                             "sum_weights": f"sum(payload({model_name},{topic}))".format(topic=topic)
                         }
                     }
                 }
             }
+        
+        """
+        facet = {}
+        for i in range(25):
+            topic = f"t{i}"
+            facet[f"query_facet_{topic}"] = {
+                "type": "query",
+                "q": f"{model_name}:{topic}",
+                "facet": {
+                    "years": {
+                        "type": "range",
+                        "field": "date",
+                        "start": "2000-01-01T00:00:00Z",
+                        "end": "2024-12-31T23:59:59Z",
+                        "gap": "+1YEAR",
+                        "facet": {
+                            "sum_weights": f"sum(payload({model_name},{topic}))".format(topic=topic)    
+                        }
+                    }
+                }
+            }
+        """
         
         query_url = f"{SOLR_BASE_URL}/{core_name}/query"
         json_payload = {
@@ -373,6 +402,7 @@ def execute_query_2(model_name, core_name, session, n_iter:int=10):
         if response.status_code == 200:
             result = response.json()
             facets = result.get('facets', {})
+            #print(f"Facets: {facets}")
         else:
             print(f"Failed to fetch data. HTTP Status code: {response.status_code}")
             facets = {}
@@ -470,98 +500,6 @@ def execute_query_4(model_name, core_name, word, session, n_iter:int=10):
     print(f"Average execution time over 10 runs: {mean_time} seconds")
     print(f"STD: {std_time}")
     return mean_time, std_time
-
-def monitor_idle_mondocker(duration=3600):
-    """
-    Monitor idle CPU and memory usage for Solr and TM using mondocker.sh.
-
-    Args:
-        duration (int): Duration for monitoring in seconds.
-
-    Returns:
-        dict: A dictionary containing mean and std for CPU and memory usage for Solr and TM.
-    """
-    print(f"-- -- Monitoring Solr and TM idle usage for {duration} seconds...")
-
-    # Commands for monitoring Solr and TM CPU and memory usage
-    commands = [
-        "mondocker.sh 1 mondocker_files/solr_cpu_idle case-solr CPU",
-        "mondocker.sh 1 mondocker_files/solr_mem_idle case-solr MEM",
-        "mondocker.sh 1 mondocker_files/tm_cpu_idle case-tm CPU",
-        "mondocker.sh 1 mondocker_files/tm_mem_idle case-tm MEM"
-    ]
-
-    # Start the monitoring processes
-    processes = []
-    for command in commands:
-        process = subprocess.Popen(command, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-        processes.append(process)
-
-    # Allow monitoring to run for the specified duration
-    time.sleep(duration)
-
-    # Terminate all monitoring processes
-    for process in processes:
-        os.kill(process.pid, signal.SIGTERM)
-    print("-- -- Monitoring completed. Collecting results...")
-
-    # Initialize a dictionary to store the results
-    results = {
-        "solr": {"cpu": {}, "memory": {}},
-        "tm": {"cpu": {}, "memory": {}}
-    }
-
-    try:
-        # Read and process Solr CPU and memory data
-        solr_cpu_data = pd.read_csv("mondocker_files/solr_cpu_idle", names=["CPU Usage (%)"])
-        solr_mem_data = pd.read_csv("mondocker_files/solr_mem_idle", names=["Memory Usage (MB)"])
-        solr_mem_data["Memory Usage (MB)"] = solr_mem_data["Memory Usage (MB)"].apply(
-            lambda x: float(x.split("GiB")[0]) * 1073.74 if "GiB" in str(x) else float(x)
-        )
-
-        # Read and process TM CPU and memory data
-        tm_cpu_data = pd.read_csv("mondocker_files/tm_cpu_idle", names=["CPU Usage (%)"])
-        tm_mem_data = pd.read_csv("mondocker_files/tm_mem_idle", names=["Memory Usage (MB)"])
-        tm_mem_data["Memory Usage (MB)"] = tm_mem_data["Memory Usage (MB)"].apply(
-            lambda x: float(x.split("GiB")[0]) * 1073.74 if "GiB" in str(x) else float(x)
-        )
-
-        # Calculate statistics for Solr
-        results["solr"]["cpu"]["mean"] = solr_cpu_data["CPU Usage (%)"].mean()
-        results["solr"]["cpu"]["std"] = solr_cpu_data["CPU Usage (%)"].std()
-        results["solr"]["memory"]["mean"] = solr_mem_data["Memory Usage (MB)"].mean()
-        results["solr"]["memory"]["std"] = solr_mem_data["Memory Usage (MB)"].std()
-
-        # Calculate statistics for TM
-        results["tm"]["cpu"]["mean"] = tm_cpu_data["CPU Usage (%)"].mean()
-        results["tm"]["cpu"]["std"] = tm_cpu_data["CPU Usage (%)"].std()
-        results["tm"]["memory"]["mean"] = tm_mem_data["Memory Usage (MB)"].mean()
-        results["tm"]["memory"]["std"] = tm_mem_data["Memory Usage (MB)"].std()
-
-        # Save raw data to CSV files
-        solr_cpu_data.to_csv("results_files/solr_idle_cpu.csv", index=False)
-        solr_mem_data.to_csv("results_files/solr_idle_memory.csv", index=False)
-        tm_cpu_data.to_csv("results_files/tm_idle_cpu.csv", index=False)
-        tm_mem_data.to_csv("results_files/tm_idle_memory.csv", index=False)
-
-        # Save summary to a text file
-        with open("results_files/idle_baseline_summary.txt", "w") as summary_file:
-            summary_file.write(
-                f"Solr CPU Usage: {results['solr']['cpu']['mean']:.2f}% ± {results['solr']['cpu']['std']:.2f}%\n"
-                f"Solr Memory Usage: {results['solr']['memory']['mean']:.2f} MB ± {results['solr']['memory']['std']:.2f} MB\n"
-                f"TM CPU Usage: {results['tm']['cpu']['mean']:.2f}% ± {results['tm']['cpu']['std']:.2f}%\n"
-                f"TM Memory Usage: {results['tm']['memory']['mean']:.2f} MB ± {results['tm']['memory']['std']:.2f} MB\n"
-                # save also total memory and cpu usage
-                f"Total CPU Usage: {results['solr']['cpu']['mean'] + results['tm']['cpu']['mean']:.2f}% ± {np.sqrt(results['solr']['cpu']['std']**2 + results['tm']['cpu']['std']**2):.2f}%\n"
-                f"Total Memory Usage: {results['solr']['memory']['mean'] + results['tm']['memory']['mean']:.2f} MB ± {np.sqrt(results['solr']['memory']['std']**2 + results['tm']['memory']['std']**2):.2f} MB\n"
-            )
-
-        print("-- -- Baseline data saved.")
-
-    except Exception as e:
-        print(f"Error processing idle monitoring data: {e}")
-
-    return results
 
 def main():
     
@@ -668,51 +606,60 @@ def main():
 
         # Run each query while tracking CPU and memory usage
         for i in range(1, num_queries + 1):
-            
             commands = [
                 f"mondocker.sh 1 mondocker_files/solr_mem_{collection}_{i} case-solr MEM",
                 f"mondocker.sh 1 mondocker_files/solr_cpu_{collection}_{i} case-solr CPU",
                 f"mondocker.sh 1 mondocker_files/tm_cpu_{collection}_{i} case-tm CPU",
                 f"mondocker.sh 1 mondocker_files/tm_mem_{collection}_{i} case-tm MEM"
             ]
-            
+
+            processes = []
             try:
-                processes = []
                 for command in commands:
-                    process = run_command_with_pid(command)
+                    process = subprocess.Popen(command, shell=True, preexec_fn=os.setsid)
                     processes.append(process)
+                    print(f"Started process: {command}")
 
                 print(f"-- -- Running SOLR query {i}")
 
-                # Execute the query
-                if i == 1:
-                    results[f"solr_query_{i}"][collection]["time"]["mean"], \
-                    results[f"solr_query_{i}"][collection]["time"]["std"] = execute_query_1(model_name, core_name, session, n_iter=10)
-                elif i == 2:
-                    results[f"solr_query_{i}"][collection]["time"]["mean"], \
-                    results[f"solr_query_{i}"][collection]["time"]["std"] = execute_query_2(model_name, core_name, session, n_iter=10)
-                elif i == 3:
-                    results[f"solr_query_{i}"][collection]["time"]["mean"], \
-                    results[f"solr_query_{i}"][collection]["time"]["std"] = execute_query_3(core_name, word, session, n_iter=10)
-                elif i == 4:
-                    results[f"solr_query_{i}"][collection]["time"]["mean"], \
-                    results[f"solr_query_{i}"][collection]["time"]["std"] = execute_query_4(model_name, core_name, word, session,n_iter=10)
+                query_fn = globals().get(f"execute_query_{i}")
+                if query_fn:
+                    start_time = time.time()
+                    if i == 4:  # Special handling for execute_query_4
+                        mean_time, std_time = query_fn(model_name, core_name, word, session, n_iter=10000)
+                    elif i == 3:
+                        mean_time, std_time = query_fn(core_name, word, session, n_iter=10000)
+                    else:
+                        mean_time, std_time = query_fn(model_name, core_name, session, n_iter=1000)
+                    elapsed_time = time.time() - start_time
+                    print(f"Query {i} completed in {elapsed_time:.2f} seconds.")
+                else:
+                    print(f"Query function for query {i} not found.")
+
+                time.sleep(5)
 
             finally:
-                # Ensure all processes are terminated
                 for process in processes:
-                    os.kill(process.pid, signal.SIGTERM)
+                    os.killpg(os.getpgid(process.pid), signal.SIGINT)  
+                    process.wait() 
+                    print(f"Terminated process with PID {process.pid}")
                 print(f"-- -- Terminated all processes for SOLR query {i}")
+
+            mean_cpu, mean_mem, std_cpu, std_mem = extract_cpu_memory_usage(collection, i)
+            results[f"solr_query_{i}"][collection] = {
+                "cpu": {"mean": mean_cpu, "std": std_cpu},
+                "memory": {"mean": mean_mem, "std": std_mem},
+                "time": {"mean": mean_time, "std": std_time}
+            }
             
-            # extract cpu / memory usage
-            results[f"solr_query_{i}"][collection]["cpu"]["mean"], \
-            results[f"solr_query_{i}"][collection]["memory"]["mean"], \
-            results[f"solr_query_{i}"][collection]["cpu"]["std"], \
-            results[f"solr_query_{i}"][collection]["memory"]["std"] = extract_cpu_memory_usage(collection, i)
-            
+            # wait between queries to avoid overloading the system (5 minutes)
+            time.sleep(300)
+
+
         #---------------------------
         # Run PANDAS queries
         #---------------------------
+        """
         print(f"-- -- Running PANDAS queries for collection: {collection}")
         thetas_LDA = sparse.load_npz(path2model / "TMmodel/thetas.npz")
         thetas = thetas_LDA.toarray()
@@ -756,49 +703,16 @@ def main():
             results[query_name][collection]["cpu"]["mean"], \
             results[query_name][collection]["memory"]["mean"], \
             results[query_name][collection]["cpu"]["std"], \
-            results[query_name][collection]["memory"]["std"] = query_function(*query_args, n_iter=10)
+            results[query_name][collection]["memory"]["std"] = query_function(*query_args, n_iter=1000)
+            # wait between queries to avoid overloading the system (5 minutes)
+            time.sleep(300)
+        """
             
     print(results)
     
     # Save results to a json file
     with open("results_files/results.json", "w") as file:
         json.dump(results, file)
-    
-    # Flatten the results into a list of rows for the DataFrame
-    rows = []
-    for query, datasets in results.items():
-        for dataset, metrics in datasets.items():
-            rows.append({
-                "Query": query,
-                "Dataset": dataset,
-                "Time (s)": f"{metrics['time']['mean']:.2f} \(\pm\) {metrics['time']['std']:.2f}",
-                "CPU (%)": f"{metrics['cpu']['mean']:.2f} \(\pm\) {metrics['cpu']['std']:.2f}",
-                "Memory (MB)": f"{metrics['memory']['mean']:.2f} \(\pm\) {metrics['memory']['std']:.2f}",
-            })
-
-    df = pd.DataFrame(rows)
-    pivot_df = df.pivot(index="Query", columns="Dataset", values=["Time (s)", "CPU (%)", "Memory (MB)"])
-    pivot_df.columns = [f"{col[1]} - {col[0]}" for col in pivot_df.columns]
-    latex_table = pivot_df.to_latex(index=True, escape=False, column_format="lcccccccc", multicolumn=True, multicolumn_format='c')
-
-    # Write the LaTeX table to a file
-    with open("results_files/results_table.tex", "w") as file:
-        file.write(latex_table)
-
-    print("LaTeX table saved to results_table.tex!")
-    
-    print("-- -- Starting the analysis...")
-
-    # Step 1: Monitor Solr and TM idle baseline
-    idle_baseline = monitor_idle_mondocker(duration=3600)
-
-    print(f"Solr CPU Usage (Idle): {idle_baseline['solr']['cpu']['mean']:.2f}% ± {idle_baseline['solr']['cpu']['std']:.2f}%")
-    print(f"Solr Memory Usage (Idle): {idle_baseline['solr']['memory']['mean']:.2f} MB ± {idle_baseline['solr']['memory']['std']:.2f} MB")
-    print(f"TM CPU Usage (Idle): {idle_baseline['tm']['cpu']['mean']:.2f}% ± {idle_baseline['tm']['cpu']['std']:.2f}%")
-    print(f"TM Memory Usage (Idle): {idle_baseline['tm']['memory']['mean']:.2f} MB ± {idle_baseline['tm']['memory']['std']:.2f} MB")
-    print("Total CPU and memory usage for Solr and TM during idle monitoring:")
-    print(f"Total CPU Usage: {idle_baseline['solr']['cpu']['mean'] + idle_baseline['tm']['cpu']['mean']:.2f}%")
-    print(f"Total Memory Usage: {idle_baseline['solr']['memory']['mean'] + idle_baseline['tm']['memory']['mean']:.2f} MB")
 
 if __name__ == "__main__":
     main()

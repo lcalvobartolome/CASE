@@ -125,6 +125,7 @@
   <field name="title" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="objective" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="lemmas" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="year_str" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="euroSciVocCode" type="pint" indexed="true" stored="true" multiValued="true" />
   <field name="startDate" type="pdate" indexed="true" stored="true" multiValued="false" />
   <field name="date" type="pdate" indexed="true" stored="true" multiValued="false" />
