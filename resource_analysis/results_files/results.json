@@ -1,0 +1,242 @@
+{
+    "pandas_query_1": {
+        "ai": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        },
+        "cancer": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        }
+    },
+    "pandas_query_2": {
+        "ai": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        },
+        "cancer": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        }
+    },
+    "pandas_query_3": {
+        "ai": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        },
+        "cancer": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        }
+    },
+    "pandas_query_4": {
+        "ai": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        },
+        "cancer": {
+            "time": {
+                "mean": null,
+                "std": null
+            },
+            "cpu": {
+                "mean": null,
+                "std": null
+            },
+            "memory": {
+                "mean": null,
+                "std": null
+            }
+        }
+    },
+    "solr_query_1": {
+        "ai": {
+            "cpu": {
+                "mean": 118.95142857142858,
+                "std": 66.39661898664075
+            },
+            "memory": {
+                "mean": 1149.3380952380953,
+                "std": 4.911769150772081
+            },
+            "time": {
+                "mean": 0.07948025846481323,
+                "std": 0.015212682678395152
+            }
+        },
+        "cancer": {
+            "cpu": {
+                "mean": 102.3956,
+                "std": 25.08010978396048
+            },
+            "memory": {
+                "mean": 1319.6034676,
+                "std": 1.0211268514525738
+            },
+            "time": {
+                "mean": 0.1972879011631012,
+                "std": 0.012571859729977023
+            }
+        }
+    },
+    "solr_query_2": {
+        "ai": {
+            "cpu": {
+                "mean": 102.98644628099171,
+                "std": 13.946514191695844
+            },
+            "memory": {
+                "mean": 1208.4140495867769,
+                "std": 4.682899845628492
+            },
+            "time": {
+                "mean": 0.4882372133731842,
+                "std": 0.0088790802378394
+            }
+        },
+        "cancer": {
+            "cpu": {
+                "mean": 104.11698795180722,
+                "std": 7.0511599157127405
+            },
+            "memory": {
+                "mean": 1324.2525094578314,
+                "std": 2.201630218498318
+            },
+            "time": {
+                "mean": 1.3529716002941132,
+                "std": 0.19456678437686806
+            }
+        }
+    },
+    "solr_query_3": {
+        "ai": {
+            "cpu": {
+                "mean": 82.0388,
+                "std": 40.804892917394106
+            },
+            "memory": {
+                "mean": 1271.9378136000003,
+                "std": 42.901540240176935
+            },
+            "time": {
+                "mean": 0.009479384326934815,
+                "std": 0.0011658110239780133
+            }
+        },
+        "cancer": {
+            "cpu": {
+                "mean": 60.22428571428571,
+                "std": 21.6404347394937
+            },
+            "memory": {
+                "mean": 1332.8068409523812,
+                "std": 0.23795949911491165
+            },
+            "time": {
+                "mean": 0.007903840732574463,
+                "std": 0.0009760062748781781
+            }
+        }
+    },
+    "solr_query_4": {
+        "ai": {
+            "cpu": {
+                "mean": 68.93545454545456,
+                "std": 13.761766804018363
+            },
+            "memory": {
+                "mean": 1308.092590909091,
+                "std": 3.206654972502815
+            },
+            "time": {
+                "mean": 0.012532884621620178,
+                "std": 0.0006258739734375239
+            }
+        },
+        "cancer": {
+            "cpu": {
+                "mean": 82.53313725490197,
+                "std": 14.73506735514922
+            },
+            "memory": {
+                "mean": 1337.8333450980392,
+                "std": 4.2101917667523905
+            },
+            "time": {
+                "mean": 0.019935372495651246,
+                "std": 0.0009877317668079003
+            }
+        }
+    }
+}

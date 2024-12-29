@@ -1,0 +1,55 @@
+System message:
+
+Your input fields are:
+1. `KEYWORDS` (str)
+2. `DOCUMENT_A` (str)
+3. `DOCUMENT_B` (str)
+
+Your output fields are:
+1. `reasoning` (str)
+2. `MOST_RELEVANT:` (str): Document that is more relevant related to the KEYWORDS (A or B)
+
+All interactions will be structured in the following way, with the appropriate values filled in.
+
+[[ ## KEYWORDS ## ]]
+{{KEYWORDS}}
+
+[[ ## DOCUMENT_A ## ]]
+{{DOCUMENT_A}}
+
+[[ ## DOCUMENT_B ## ]]
+{{DOCUMENT_B}}
+
+[[ ## reasoning ## ]]
+{{reasoning}}
+
+[[ ## MOST_RELEVANT ## ]]
+{{MOST_RELEVANT}}
+
+[[ ## completed ## ]]
+
+In adhering to this structure, your objective is:
+        Determine which document (A or B) is more relevant to the given keywords. Your response should always decide between A or B.
+
+
+User message:
+
+[[ ## KEYWORDS ## ]]
+{topic_keys}
+
+[[ ## DOCUMENT_A ## ]]
+{doc_a}
+
+[[ ## DOCUMENT_B ## ]]
+{doc_b}
+
+Respond with the corresponding output fields, starting with the field `[[ ## reasoning ## ]]`, then `[[ ## MOST_RELEVANT ## ]]`, and then ending with the marker for `[[ ## completed ## ]]`.
+[[ ## reasoning ## ]]
+<Explain your reasoning here>
+
+[[ ## MOST_RELEVANT ## ]]
+<A or B>
+
+[[ ## completed ## ]]
+
+Your Response:

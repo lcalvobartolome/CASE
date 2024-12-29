@@ -1,0 +1,10 @@
+You will be provided with a topic identified by a set of words (KEYWORDS), and two documents (DOCUMENT A and DOCUMENT B). Your task is to determine which document is more relevant to the topic. You can assume that the documents are relevant to the topic, but one of them is more relevant than the other. Don't make decisions based on the length of the documents, or being more concise or detailed. Focus on the relevance to the topic.
+
+KEYWORDS: {topic_keys}
+
+DOCUMENT A: {doc_a}
+
+DOCUMENT B: {doc_b}
+
+Which document is more relevant to the topic? Return just the letter of the document (A or B).
+MOST_RELEVANT:

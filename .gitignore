@@ -165,3 +165,5 @@ data
 db
 *DS_Store
 .vscode
+.venv_s3
+cache
