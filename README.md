@@ -1,7 +1,7 @@
 <!-- markdownlint-disable MD041 -->
 <!-- markdownlint-disable MD033 -->
 <p align="center" style="display: flex; align-items: left; justify-content: center; gap: 10px; font-size: 2em;">
-  <img src="./static/Images/Case_logo4.png" alt="Logo" width="90" height="90" style="display: inline-block;">
+  <img src="./static/Images/Case_logo4.png" alt="Logo" width="200" height="200" style="display: inline-block;">
 </p>
 <!-- markdownlint-enable MD033 -->
 <!-- markdownlint-disable MD041 -->
