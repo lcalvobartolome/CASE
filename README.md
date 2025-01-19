@@ -1,16 +1,21 @@
-# CASE
+<!-- markdownlint-disable MD041 -->
+<!-- markdownlint-disable MD033 -->
+<p align="center" style="display: flex; align-items: left; justify-content: center; gap: 10px; font-size: 2em;">
+  <img src="./static/Images/Case_logo4.png" alt="Logo" width="90" height="90" style="display: inline-block;">
+</p>
+<!-- markdownlint-enable MD033 -->
+<!-- markdownlint-disable MD041 -->
 
-- [CASE](#case)
-  - [Overview](#overview)
-  - [Deployment Steps](#deployment-steps)
-  - [Indexing](#indexing)
-    - [Corpus Indexing](#corpus-indexing)
-    - [Model Indexing](#model-indexing)
-  - [Endpoints](#endpoints)
-    - [Collections](#collections)
-    - [Corpora](#corpora)
-    - [Models](#models)
-    - [Queries](#queries)
+- [Overview](#overview)
+- [Deployment Steps](#deployment-steps)
+- [Indexing](#indexing)
+   - [Corpus Indexing](#corpus-indexing)
+   - [Model Indexing](#model-indexing)
+- [Endpoints](#endpoints)
+   - [Collections](#collections)
+   - [Corpora](#corpora)
+   - [Models](#models)
+   - [Queries](#queries)
 
 ## Overview
 
