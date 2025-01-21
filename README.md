@@ -6,24 +6,11 @@
 <!-- markdownlint-enable MD033 -->
 <!-- markdownlint-disable MD041 -->
 
-- [Overview](#overview)
-- [Deployment Steps](#deployment-steps)
-- [Indexing](#indexing)
-   - [Corpus Indexing](#corpus-indexing)
-   - [Model Indexing](#model-indexing)
-- [Endpoints](#endpoints)
-   - [Collections](#collections)
-   - [Corpora](#corpora)
-   - [Models](#models)
-   - [Queries](#queries)
-
-## Overview
-
 CASE is a Solr-based exploitation tool designed to efficiently index metadata and topic information. It is optimized for calculating aggregated indicators, semantic similarities, and supporting web service requests.
 
 The Solr-powered service is a multi-container application with a Solr search engine for data storage and retrieval. The Python-based RESTful API (`case-tm`) acts as an intermediary between Solr and the user (or frontend). It utilizes two additional services: `case-inferencer` for text inference using indexed models, and `case-classifier` for classification. The TM API also provides endpoints for indexing collections and topic models.
 
-## Deployment Steps
+## 🚀 Deployment Steps
 
 1. **Prepare the Data Source**  
    Create a folder named `data/source` and place all the corpus and model information you wish to index into this directory.
@@ -47,9 +34,9 @@ The Solr-powered service is a multi-container application with a Solr search eng
    - Access the Solr service, which should be available at [http://your_server_name:20003/solr/#/](http://your_server_name:20003/solr/#/).
    - Create a test collection using the `case_config` configset via the Solr interface. If the setup is successful, you may delete the test collection and proceed with indexing.
 
-## Indexing
+## 📂 Indexing
 
-### Corpus Indexing
+### 📚 Corpus Indexing
 
 To index a corpus, we require the presence of the raw corpus in the mounted volume ``"/data/source"``.
 
@@ -61,7 +48,7 @@ This process creates a corpus collection named ``"hfri"`` in Solr. The collectio
 
 During corpus indexing, an entry is also created in the "corpora" collection. This collection stores information about all the corpus collections indexed in the Solr instances, along with their indexed models.
 
-### Model Indexing
+### 🧠 Model Indexing
 
 To index a model, the following requirements must be met:
 
@@ -84,9 +71,9 @@ These additional fields are included in the corpus information within the ``"cor
 
 ![Collection corpora after indexing corpus and model](https://github.com/Nemesis1303/CASE/blob/main/static/Images/after_model.png)
 
-## Endpoints
+## 🔗 Endpoints
 
-### Collections
+### 📦 Collections
 
 The endpoints in this category refer to generic Solr-related operations that, in principle, **will only be used internally:**
 
@@ -95,7 +82,7 @@ The endpoints in this category refer to generic Solr-related operations that, in
 - ``/collections/listCollections/``: List all collections available in the Solr instance.
 - ``/collections/query/``: Performs a generic Solr query.
 
-### Corpora
+### 📚 Corpora
 
 These endpoints performs corpora-related operations, that is, those related with the management, indexing and listing of linguistic data sets or collections known as corpora:
 
@@ -108,7 +95,7 @@ These endpoints performs corpora-related operations, that is, those related with
 - ``/corpora/addSearcheableFields/``: Adds metadata fields to a corpus, enabling them for semantic search.
 - ``/corpora/deleteSearcheableFields/``: Removes specific metadata fields from a corpus, disabling them from semantic search.
 
-### Models
+### 🧠 Models
 
 These endpoints performs models-related operations, that is, those related with the management, indexing and listing of topic models:
 
@@ -118,7 +105,7 @@ These endpoints performs models-related operations, that is, those related with 
 - ``/models/addRelevantTpcForUser/``: Adds a topic's relevance information for a user to a model collection.
 - ``/models/removeRelevantTpcForUser/``: Removes a topic's relevance information for a user to a model collection.
 
-### Queries
+### 🛠️ Queries
 
 |          **Endpoint**          |                                                                                             **Description**                                                                                             |                                                                                                                                                                                                                                    **Returns**                                                                                                                                                                                                                                     |
 | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -141,3 +128,31 @@ These endpoints performs models-related operations, that is, those related with 
 | getBetasByWordAndTopicId       | Get the topic-word distribution of a given word in a given topic associated with a given model                                                                                                          | ``{"betas": betas}``                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
 | getBOWbyDocsIDs                | Get the BoW counts of a given words in a document.                                                                                                                                                      | ``{"id": id, "payload(bow,word)": count}``                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | getUserRelevantTopics          | Get the topic-word distribution of a given word in a given topic associated with a given model                                                                                                          | ``[{"id":id1, "betas": betas1, "alphas": alphas1, "topic_entropy":entropies1, "topic_coherence":cohrs1, "ndocs_active":active1, "tpc_descriptions":desc1, "tpc_labels":labels1, "coords":coords1, "top_words_betas":top_words_betas1,}, {"id":id2, "betas": betas2, "alphas": alphas2, "topic_entropy":entropies2, "topic_coherence":cohrs2, "ndocs_active":active2, "tpc_descriptions":desc2, "tpc_labels":labels2, "coords":coords2, "top_words_betas":top_words_betas2}, ...]`` |
+
+## ✍️ Cite us
+If you find CASE useful in your work, we'd greatly appreciate it if you could cite us! 
+```
+@inproceedings{calvo-bartolome-etal-2025-case,
+    title = "{CASE}: Large Scale Topic Exploitation for Decision Support Systems",
+    author = "Calvo Bartolom{\'e}, Lorena  and
+      Arenas-Garc{\'i}a, Jer{\'o}nimo  and
+      P{\'e}rez Fern{\'a}ndez, David",
+    editor = "Rambow, Owen  and
+      Wanner, Leo  and
+      Apidianaki, Marianna  and
+      Al-Khalifa, Hend  and
+      Eugenio, Barbara Di  and
+      Schockaert, Steven  and
+      Mather, Brodie  and
+      Dras, Mark",
+    booktitle = "Proceedings of the 31st International Conference on Computational Linguistics: System Demonstrations",
+    month = jan,
+    year = "2025",
+    address = "Abu Dhabi, UAE",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2025.coling-demos.15/",
+    pages = "151--162"
+}
+```
+
+If you run into any issues or have questions, don't hesitate to reach out!
