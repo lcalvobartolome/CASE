@@ -130,8 +130,9 @@ These endpoints performs models-related operations, that is, those related with 
 | getUserRelevantTopics          | Get the topic-word distribution of a given word in a given topic associated with a given model                                                                                                          | ``[{"id":id1, "betas": betas1, "alphas": alphas1, "topic_entropy":entropies1, "topic_coherence":cohrs1, "ndocs_active":active1, "tpc_descriptions":desc1, "tpc_labels":labels1, "coords":coords1, "top_words_betas":top_words_betas1,}, {"id":id2, "betas": betas2, "alphas": alphas2, "topic_entropy":entropies2, "topic_coherence":cohrs2, "ndocs_active":active2, "tpc_descriptions":desc2, "tpc_labels":labels2, "coords":coords2, "top_words_betas":top_words_betas2}, ...]`` |
 
 ## ✍️ Cite us
-If you find CASE useful in your work, we'd greatly appreciate it if you could cite us! 
-```
+If you find CASE useful in your work, we'd greatly appreciate it if you could cite us!
+
+```bibtex
 @inproceedings{calvo-bartolome-etal-2025-case,
     title = "{CASE}: Large Scale Topic Exploitation for Decision Support Systems",
     author = "Calvo Bartolom{\'e}, Lorena  and
@@ -156,3 +157,9 @@ If you find CASE useful in your work, we'd greatly appreciate it if you could ci
 ```
 
 If you run into any issues or have questions, don't hesitate to reach out!
+
+🤝 Acknowledgements
+
+This project has received funding from the European Union’s Horizon 2020 research and innovation program under grant agreement No 101004870 (IntelComp project) and from Grant TED2021-132366B-I00 funded by MICIU/AEI/10.13039/501100011033 and by the ``European Union NextGenerationEU/PRTICIU.
+
+![alt text](static/Images/EW_logos.png)
