@@ -158,7 +158,7 @@ If you find CASE useful in your work, we'd greatly appreciate it if you could ci
 
 If you run into any issues or have questions, don't hesitate to reach out!
 
-🤝 Acknowledgements
+## 🤝 Acknowledgements
 
 This project has received funding from the European Union’s Horizon 2020 research and innovation program under grant agreement No 101004870 (IntelComp project) and from Grant TED2021-132366B-I00 funded by MICIU/AEI/10.13039/501100011033 and by the ``European Union NextGenerationEU/PRTICIU.
 
