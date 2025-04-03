@@ -35,7 +35,7 @@ def calculate_sims(logger: logging.Logger,
   
   logger.info(f"Topn: {topn}")
   sims = awesome_cossim_topn(thetas_sqrt, thetas_col, topn, lb)
-  sparse.save_npz(TMfolder.joinpath('distances_awesome.npz'), sims)
+  sparse.save_npz(TMfolder.joinpath('distances.npz'), sims)
 
   t_end = time.perf_counter()
   t_total = (t_end - t_start)/60

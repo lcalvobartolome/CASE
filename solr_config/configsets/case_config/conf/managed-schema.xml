@@ -123,19 +123,40 @@
   <field name="rawtext" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="raw_text" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="title" type="text_general" indexed="true" stored="true" multiValued="false" />
-  <field name="objective" type="text_general" indexed="true" stored="true" multiValued="false" />
+
   <field name="lemmas" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="year_str" type="text_general" indexed="true" stored="true" multiValued="false" />
-  <field name="euroSciVocCode" type="pint" indexed="true" stored="true" multiValued="true" />
-  <field name="startDate" type="pdate" indexed="true" stored="true" multiValued="false" />
   <field name="date" type="pdate" indexed="true" stored="true" multiValued="false" />
   <field name="nwords_per_doc" type="pint" indexed="true" stored="true" multiValued="false" />
   <field name="SearcheableField" type="text_general" indexed="true" stored="true" multiValued="false" />
+
+  <!-- cordis fields  -->
+  <field name="objective" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="startDate" type="pdate" indexed="true" stored="true" multiValued="false" />
+  <field name="endDate" type="pdate" indexed="true" stored="true" multiValued="false" />
+  <field name="ecMaxContribution" type="pfloat" indexed="true" stored="true" multiValued="false" />
+  <field name="Uc3mBudget" type="pfloat" indexed="true" stored="true" multiValued="false" />
+  <field name="EsBudget" type="pfloat" indexed="true" stored="true" multiValued="false" />
+  <field name="frameworkProgramme" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="countryContr" type="VectorFloatField" indexed="true" termOffsets="true" stored="true"
+    termPositions="true" termVectors="true" multiValued="false" />
+  <field name="orgContr" type="VectorFloatField" indexed="true" termOffsets="true" stored="true"
+    termPositions="true" termVectors="true" multiValued="false" />
+  <field name="coordinatorCountry" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="coordinatorOrg" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="euroSciVocCode" type="pint" indexed="true" stored="true" multiValued="true" />
   
+  <!-- horizon_work_programmes fields  -->
+  <field name="cluster" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Budget" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Type_of_Action" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Expected_Outcome" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Scope" type="text_general" indexed="true" stored="true" multiValued="false" />
+
   <!-- HFRI fields  -->
   <field name="Summary" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="keywords" type="text_general" indexed="true" stored="true" multiValued="false" />
-  <field name="Budget" type="pfloat" indexed="true" stored="true" multiValued="false" />
+    <!-- <field name="Budget" type="pfloat" indexed="true" stored="true" multiValued="false" />-->
   <field name="Duration" type="pfloat" indexed="true" stored="true" multiValued="false" />
   <field name="Call" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="field1" type="text_general" indexed="true" stored="true" multiValued="false" />

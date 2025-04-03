@@ -55,3 +55,10 @@ title_field=title
 date_field=year
 EWBdisplayed=title,date
 SearcheableField=title
+
+[horizon_work_programmes-config]
+id_field=Idcall
+title_field=Title
+date_field=YearSpan
+EWBdisplayed=title,date
+SearcheableField=title

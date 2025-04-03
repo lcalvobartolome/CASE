@@ -97,9 +97,13 @@ class Model(object):
 
         # Get model information as dataframe, where each row is a topic
         df, vocab_id2w, vocab = self.tmmodel.to_dataframe()
+        
+        self._logger.info(f"before explode: {df.head(5)}")
+        
         df = df.apply(pd.Series.explode)
-        df.reset_index(drop=True)
         df["id"] = [f"t{i}" for i in range(len(df))]
+        
+        self._logger.info(f"Ok after explode: {df.head(5)}")
 
         cols = df.columns.tolist()
         cols = cols[-1:] + cols[:-1]
@@ -113,6 +117,8 @@ class Model(object):
 
         df["betas_scale"] = df["betas"].apply(
             lambda x: get_betas_scale(x, self.betas_max_sum))
+        
+        self._logger.info(f"Ok after betas scale: {df.head(5)}")
 
         # Get words in each topic
         def get_tp_words(vector: np.array,
@@ -121,6 +127,8 @@ class Model(object):
 
         df["vocab"] = df["betas"].apply(
             lambda x: get_tp_words(x, vocab_id2w))
+        
+        self._logger.info(f"Ok after vocab: {df.head(5)}")
 
         # Get betas string representation
         def get_tp_str_rpr(vector: np.array,
@@ -148,6 +156,8 @@ class Model(object):
 
         df['top_words_betas'] = df.apply(
             lambda row: get_top_words_betas(row, vocab), axis=1)
+        
+        self._logger.info(f"Ok after top_words_betas: {df.head(5)}")
 
         # Drop betas scale because it is not needed
         df = df.drop(columns=["betas_scale", "betas_ds"])

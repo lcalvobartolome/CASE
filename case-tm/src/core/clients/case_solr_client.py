@@ -6,6 +6,7 @@ Date: 17/04/2023
 """
 
 import configparser
+import json
 import logging
 import pathlib
 import re
@@ -119,6 +120,9 @@ class CASESolrClient(SolrClient):
         # 6. Index documents in corpus collection
         self.logger.info(
             f"-- -- Indexing of {corpus_logical_name} in {corpus_logical_name} starts.")
+        #corpus_file = "/data/source/indexing.json"
+        #with open(corpus_file, 'w') as f:
+        #    json.dump(json_docs, f, indent=2)
         self.index_documents(json_docs, corpus_logical_name, self.batch_size)
         self.logger.info(
             f"-- -- Indexing of {corpus_logical_name} in {corpus_logical_name} completed.")
