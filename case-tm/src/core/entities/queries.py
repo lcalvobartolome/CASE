@@ -7,6 +7,9 @@ Date: 19/04/2023
 """
 
 
+from typing import List
+
+
 class Queries(object):
 
     def __init__(self) -> None:
@@ -271,6 +274,31 @@ class Queries(object):
             'rows': '{}'
         }
         
+        #-------------------------------------------------------------------
+        # Aggregated corpora queries
+        #-------------------------------------------------------------------
+        # ================================================================
+        # # Q20: getTopicTopResearchers
+        # ################################################################
+        # # Get the top documents for a given topic in a model collection
+        # http://localhost:8983/solr/cordis/select?indent=true&q.op=OR&q=%7B!term%20f%3D{model}%7Dt{topic_id}&useParams=
+        # http://localhost:8983/solr/#/{corpus_collection}/query?q=*:*&q.op=OR&indent=true&fl=doctpc_{model_name},%20nwords_per_doc&sort=payload(doctpc_{model_name},t{topic_id})%20desc,%20nwords_per_doc%20desc&useParams=
+        # ================================================================
+        self.Q20 = {
+            'q': '*:*',
+            'sort': 'payload(agg_rel_{},t{}) desc',
+            'fl': 'payload(agg_rel_{},t{}), id, researchItems_{}',
+            'start': '{}',
+            'rows': '{}'
+        }
+
+        self.Q21 = {
+            'q': 'id:{} OR', #here a list of ids comes and then we format it with 'OR' separator times the number of ids
+            'sort': 'nwords_per_doc desc',
+            'fl': 'id, bow, nwords_per_doc',
+            'start': '{}',
+            'rows': '{}'
+        }
         
     def customize_Q1(self,
                      id: str,
@@ -801,3 +829,44 @@ class Queries(object):
         }
 
         return custom_q19
+    
+    def customize_Q20(
+        self,
+        model_name: str,
+        topic_id: str,
+        start: str,
+        rows: str,
+    ):
+        
+        custom_q20 = {
+            'q': self.Q20['q'],
+            'sort': self.Q20['sort'].format(model_name, topic_id),
+            'fl': self.Q20['fl'].format(model_name, topic_id, model_name),
+            'start': self.Q20['start'].format(start),
+            'rows': self.Q20['rows'].format(rows),
+        }
+        return custom_q20
+    
+    def customize_Q21(
+        self,
+        ids: List[str],
+        start: str,
+        rows: str,
+    ):
+        ids_formatted = []
+        for i in range(len(ids)):
+            if i != len(ids) - 1:
+                ids_formatted.append(self.Q21['q'].format(ids[i]))
+            else:
+                # remove the last 'OR'
+                ids_formatted.append(self.Q21['q'].format(ids[i])[:-3])
+        ids_formatted = ' '.join(ids_formatted)
+        
+        custom_q21 = {
+            'q': ids_formatted,
+            'sort': self.Q21['sort'],
+            'fl': self.Q21['fl'],
+            'start': self.Q21['start'].format(start),
+            'rows': self.Q21['rows'].format(rows),
+        }
+        return custom_q21

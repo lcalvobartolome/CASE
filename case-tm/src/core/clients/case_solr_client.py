@@ -392,6 +392,61 @@ class CASESolrClient(SolrClient):
             return False
 
         return True
+    
+    def check_is_ag_corpus(self, agg_corpus_col) -> bool:
+        """Checks if the collection given by 'agg_corpus_col' is an aggregated corpus collection.
+
+        Parameters
+        ----------
+        agg_corpus_col : str
+            Name of the collection to be checked.
+
+        Returns
+        -------
+        is_ag_corpus: bool
+            True if the collection is an aggregated corpus collection, False otherwise.
+        """
+
+        ag_corpus_colls, _ = self.list_ag_collections()
+        ag_corpus_colls_names = [
+            ag_corpus["agg_name"] for ag_corpus in ag_corpus_colls]
+        if agg_corpus_col not in ag_corpus_colls_names:
+            self.logger.error(
+                f"-- -- {agg_corpus_col} is not an aggregated corpus collection. Aborting operation...")
+            return False
+
+        return True
+    
+    def check_ag_corpus_has_model(self, agg_corpus_col, model_name) -> bool:
+        """Checks if the collection given by 'agg_corpus_col' has a model with name 'model_name'.
+
+        Parameters
+        ----------
+        agg_corpus_col : str
+            Name of the collection to be checked.
+        model_name : str
+            Name of the model to be checked.
+
+        Returns
+        -------
+        has_model: bool
+            True if the collection has the model, False otherwise.
+        """
+
+        ag_corpus_colls, _ = self.list_ag_collections()
+        
+        # keep instances of ag_corpus_colls with the same name as the one given by agg_corpus_col
+        ag_corpus_colls = [
+            ag_corpus for ag_corpus in ag_corpus_colls if ag_corpus["agg_name"] == agg_corpus_col]
+        
+        ag_corpus_colls_models = [
+            ag_corpus["models"] for ag_corpus in ag_corpus_colls]
+        
+        if model_name not in ag_corpus_colls_models:
+            self.logger.error(
+                f"-- -- {agg_corpus_col} does not have the model {model_name}. Aborting operation...")
+            return False
+        return True
 
     def check_corpus_has_model(self, corpus_col, model_name) -> bool:
         """Checks if the collection given by 'corpus_col' has a model with name 'model_name'.
@@ -743,10 +798,13 @@ class CASESolrClient(SolrClient):
         
         # 5. Add field for the doc-tpc distribution associated with the agg_corpus being indexed in the document associated with the corpus
         for model_key in model_keys_to_add_to_schema:
+            
+            field_type = 'VectorFloatField' if "agg_rel_" in model_key else 'VectorField'
+            
             self.logger.info(
                 f"-- -- Adding field {model_key} in {self.corpus_col} collection")
             _, err = self.add_field_to_schema(
-                col_name=self.agg_corpora_col, field_name=model_key, field_type='VectorField')
+                col_name=self.agg_corpora_col, field_name=model_key, field_type=field_type)
         
         # 6. Index aggregated corpus and its fields in AGG_CORPORA_COL
         self.logger.info(
@@ -2062,3 +2120,145 @@ class CASESolrClient(SolrClient):
             return
 
         return results.docs, sc
+
+    def do_Q20(
+        self,
+        agg_corpus_col: str,
+        model_name: str,
+        topic_id: str,
+        start: str,
+        rows: str
+    ) -> Union[dict, int]:
+        """Executes query Q9.
+
+        Parameters
+        ----------
+        corpus_col: str
+            Name of the corpus collection on which the query will be carried out
+        model_name: str
+            Name of the model collection on which the search will be based
+        topic_id: str
+            ID of the topic whose top-documents will be retrieved
+        start: str
+            Index of the first document to be retrieved
+        rows: str
+            Number of documents to be retrieved
+
+        Returns
+        -------
+        json_object: dict
+            JSON object with the results of the query.
+        sc : int
+            The status code of the response.
+        """
+        
+        # 0. Convert corpus and model names to lowercase
+        agg_corpus_col = agg_corpus_col.lower()
+        model_name = model_name.lower()
+
+        # 1. Check that corpus_col is indeed an agg_corpus collection
+        if not self.check_is_ag_corpus(agg_corpus_col):
+            return
+
+        # 2. Check if the model_name is in the agg_corpus collection
+        if not self.check_ag_corpus_has_model(agg_corpus_col, model_name):
+            return
+
+        # 3. Customize start and rows
+        if rows is None:
+            rows = "100"
+            
+        start, rows = self.custom_start_and_rows(start, rows, agg_corpus_col)
+        # We limit the maximum number of results since they are top-documents
+        # If more results are needed pagination should be used
+        if int(rows) > 100:
+            rows = "100"
+
+        # 5. Execute query
+        q20 = self.querier.customize_Q20(
+            model_name=model_name,
+            topic_id=topic_id,
+            start=start,
+            rows=rows)
+        params = {k: v for k, v in q20.items() if k != 'q'}
+
+        sc, results = self.execute_query(
+            q=q20['q'], col_name=agg_corpus_col, **params)
+
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error executing query Q20. Aborting operation...")
+            return
+
+        # 6. Return a dictionary with names more understandable to the end user
+        proportion_key = "payload(agg_rel_{},t{})".format(model_name, topic_id)
+        for dict in results.docs:
+            if proportion_key in dict.keys():
+                dict["topic_relevance"] = proportion_key
+
+        # 7. Get the topic's top words
+        start_model, rows_model = self.custom_start_and_rows(start, None, model_name)
+        q10_results, sc = self.do_Q10(
+            model_col=model_name,
+            start=start_model,
+            rows=rows_model,
+            only_id=False)
+        
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error executing query Q10 when using in Q9. Aborting operation...")
+            return
+        
+        for topic in q10_results:
+            this_tpc_id = topic['id'].split('t')[1]
+            if this_tpc_id == topic_id:
+                words = topic['tpc_descriptions']
+                break
+                
+        dict_bow, sc = self.do_Q18(
+            corpus_col=corpus_col,
+            ids=",".join([d['id'] for d in results.docs]),
+            words=",".join(words.split(", ")),
+            start=start,
+            rows=rows)
+        
+        # 7. Merge results
+        def replace_payload_keys(dictionary):
+            new_dict = {}
+            for key, value in dictionary.items():
+                match = re.match(r'payload\(bow,(\w+)\)', key)
+                if match:
+                    new_key = match.group(1)
+                else:
+                    new_key = key
+                new_dict[new_key] = value
+            return new_dict
+        
+        merged_tpcs = []
+        try:
+            for d1 in results.docs:
+                id_value = d1['id']
+                
+                # Try to find the corresponding dictionary in dict_bow, return None if not found
+                d2 = next((item for item in dict_bow if item["id"] == id_value), None)
+                
+                # If d2 is None, log a warning and skip this entry
+                if d2 is None:
+                    self.logger.warning(f"No match found in dict_bow for id: {id_value}")
+                    continue
+                
+                # Create the new dictionary with safe lookups
+                new_dict = {
+                    "id": id_value,
+                    "topic_relevance": d1.get("topic_relevance", 0),
+                    "num_words_per_doc": d1.get("num_words_per_doc", 0),
+                    # Only include keys in replace_payload_keys if they exist in d2
+                    "counts": replace_payload_keys({key: d2.get(key) for key in d2 if key.startswith("payload(bow,")})
+                }
+
+                merged_tpcs.append(new_dict)
+        except Exception as e:
+            self.logger.error(f"Error merging results: {e}")
+            return
+
+        return merged_tpcs, sc

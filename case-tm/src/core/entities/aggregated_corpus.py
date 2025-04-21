@@ -2,9 +2,11 @@
 
 import configparser
 import json
+import math
 import pathlib
 from typing import List
 
+import numpy as np
 from scipy import sparse
 from scipy.sparse import vstack
 import dask.dataframe as dd
@@ -92,8 +94,10 @@ class AggregatedCorpus(object):
             model_path = pathlib.Path(self.cf.get("aggregated-config", model))
             thetas = sparse.load_npz((model_path / 'TMmodel/thetas.npz'))
             
-            model_key = 'agg_tpc_' + model.lower()
-            model_keys_to_add_to_schema.append(model_key)
+            tpc_rpr_key = 'agg_tpc_' + model.lower()
+            tpc_rel_key = 'agg_rel_' + model.lower()
+            model_keys_to_add_to_schema.append(tpc_rpr_key)
+            model_keys_to_add_to_schema.append(tpc_rel_key)
             
             self.models.append(model.lower())
             
@@ -103,7 +107,7 @@ class AggregatedCorpus(object):
             
             id_to_index = {pid: idx for idx, pid in enumerate(ids)}
             
-            def get_topics(items, max_sum=1000):
+            def get_topics_rpr(items, max_sum=1000):
                 """Get the topics for a given list of items."""
                 # items is the list of research items associated with the row
                 indices = [id_to_index[pid] for pid in items if pid in id_to_index]
@@ -122,12 +126,45 @@ class AggregatedCorpus(object):
                             rpr += "t" + str(idx) + "|" + str(val) + " "
                     rpr = rpr.rstrip()
                     
-                return rpr if mean_vector is not None else ""
+                return rpr if mean_vector is not None else "" 
             
-            df[model_key] = df[col].apply(lambda x: get_topics(x))
+            df[tpc_rpr_key] = df[col].apply(lambda x: get_topics_rpr(x))
             
             self._logger.info(f"Topics for {col} calculated.")
-            self._logger.info(f"{df[['id', model_key]].head()}")
+            self._logger.info(f"{df[['id', tpc_rpr_key]].head()}")
+            
+            def get_topic_rel(items):
+                indices = [id_to_index[pid] for pid in items if pid in id_to_index]
+                
+                if not indices:
+                    #return [0.0] * thetas.shape[1]
+                    return ""
+
+                thetas_indices = thetas[indices]
+
+                dense = thetas_indices.toarray()
+
+                topic_sums = dense.sum(axis=0)
+
+                # Apply penalty
+                penalty = math.log(len(indices) + 1)
+                topic_rels = topic_sums / penalty
+                
+                topic_rels = topic_rels.tolist()
+                
+                # transform to string representation
+                rel = ""
+                for idx, val in enumerate(topic_rels):
+                    if val != 0:
+                        rel += "t" + str(idx) + "|" + str(val) + " "
+                rel = rel.rstrip()
+
+                return rel
+            
+            df[tpc_rel_key] = df[col].apply(lambda x: get_topic_rel(x))
+            
+            self._logger.info(f"Topic relevance for {col} calculated.")
+            self._logger.info(f"{df[['id', tpc_rel_key]].head()}")
             
         json_str = df.to_json(orient='records')
         json_lst = json.loads(json_str)

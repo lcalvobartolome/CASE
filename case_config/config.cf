@@ -72,7 +72,7 @@ EWBdisplayed=title,date
 SearcheableField=title
 
 [scipapers-config]
-id_field=S2id
+id_field=actID
 title_field=title
 date_field=Year
 EWBdisplayed=title,date
