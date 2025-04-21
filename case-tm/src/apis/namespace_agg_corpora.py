@@ -68,6 +68,6 @@ class listAggregatedCorpora(Resource):
     @api.doc()
     def get(self):
         try:
-            return sc.list_aggregated_corpora(), 200
+            return sc.list_ag_collections()
         except Exception as e:
             return str(e), 500

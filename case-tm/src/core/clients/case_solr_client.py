@@ -16,6 +16,7 @@ from typing import List, Union
 from src.core.clients.external.case_inferencer_client import CASEInferencerClient
 from src.core.clients.base.solr_client import SolrClient
 from src.core.entities.corpus import Corpus
+from src.core.entities.aggregated_corpus import AggregatedCorpus
 from src.core.entities.model import Model
 from src.core.entities.queries import Queries
 
@@ -33,10 +34,12 @@ class CASESolrClient(SolrClient):
         self.solr_config = cf.get('restapi', 'case_config')
         self.batch_size = int(cf.get('restapi', 'batch_size'))
         self.corpus_col = cf.get('restapi', 'corpus_col')
+        self.agg_corpora_col = cf.get('restapi', 'agg_corpora_col')
         self.no_meta_fields = cf.get('restapi', 'no_meta_fields').split(",")
         self.thetas_max_sum = int(cf.get('restapi', 'thetas_max_sum'))
         self.betas_max_sum = int(cf.get('restapi', 'betas_max_sum'))
         self.path_source = pathlib.Path(cf.get('restapi', 'path_source'))
+        self.added_fields = set()
         
         # Create Queries object for managing queries
         self.querier = Queries()
@@ -45,7 +48,26 @@ class CASESolrClient(SolrClient):
         self.inferencer = CASEInferencerClient(logger)
 
         return
-
+    
+    def add_field_to_schema(self, col_name, field_name, field_type):
+        
+        if field_name in self.added_fields:
+            self.logger.info(
+                f"-- -- Field {field_name} already added to {col_name} collection. Aborting operation...")
+            return
+        
+        res, sc = super().add_field_to_schema(col_name, field_name, field_type)
+        
+        if sc == 200:
+            self.logger.info(
+                f"-- -- Field {field_name} added to {col_name} collection.")
+            self.added_fields.add(field_name)
+        else:
+            self.logger.error(
+                f"-- -- Error adding field {field_name} to {col_name} collection. Aborting operation...")
+        
+        return res, sc
+    
     # ======================================================
     # CORPUS-RELATED OPERATIONS
     # ======================================================
@@ -89,11 +111,12 @@ class CASESolrClient(SolrClient):
 
             # 3.1. Do query to retrieve last id in self.corpus_col
             # http://localhost:8983/solr/#/{self.corpus_col}/query?q=*:*&q.op=OR&indent=true&sort=id desc&fl=id&rows=1&useParams=
-            sc, results = self.execute_query(q='*:*',
-                                             col_name=self.corpus_col,
-                                             sort="id desc",
-                                             rows="1",
-                                             fl="id")
+            sc, results = self.execute_query(
+                q='*:*',
+                col_name=self.corpus_col,
+                sort="id desc",
+                rows="1",
+                fl="id")
             if sc != 200:
                 self.logger.error(
                     f"-- -- Error getting latest used ID. Aborting operation...")
@@ -110,7 +133,7 @@ class CASESolrClient(SolrClient):
         json_docs = corpus.get_docs_raw_info()
         corpus_col_upt = corpus.get_corpora_update(id=corpus_id)
 
-        # 5. Index corpus and its fiels in CORPUS_COL
+        # 5. Index corpus and its fields in CORPUS_COL
         self.logger.info(
             f"-- -- Indexing of {corpus_logical_name} info in {self.corpus_col} starts.")
         self.index_documents(corpus_col_upt, self.corpus_col, self.batch_size)
@@ -138,9 +161,11 @@ class CASESolrClient(SolrClient):
             List of the names of the corpus collections that have been created in the Solr server.
         """
 
-        sc, results = self.execute_query(q='*:*',
-                                         col_name=self.corpus_col,
-                                         fl="corpus_name")
+        sc, results = self.execute_query(
+            q='*:*',
+            col_name=self.corpus_col,
+            fl="corpus_name")
+        
         if sc != 200:
             self.logger.error(
                 f"-- -- Error getting corpus collections in {self.corpus_col}. Aborting operation...")
@@ -298,8 +323,7 @@ class CASESolrClient(SolrClient):
 
         return results.docs[0]["models"], sc
 
-    def delete_corpus(self,
-                      corpus_raw: str) -> None:
+    def delete_corpus(self, corpus_raw: str) -> None:
         """Given the name of a corpus raw file as input, it deletes the Solr collection associated with it. Additionally, it removes the document entry of the corpus in the self.corpus_col collection and all the models that have been trained with such a corpus.
 
         Parameters
@@ -320,9 +344,11 @@ class CASESolrClient(SolrClient):
             return
 
         # 3. Get ID and associated models of corpus collection in self.corpus_col
-        sc, results = self.execute_query(q='corpus_name:'+corpus_logical_name,
-                                         col_name=self.corpus_col,
-                                         fl="id,models")
+        sc, results = self.execute_query(
+            q='corpus_name:'+corpus_logical_name,
+            col_name=self.corpus_col,
+            fl="id,models")
+        
         if sc != 200:
             self.logger.error(
                 f"-- -- Error getting corpus ID. Aborting operation...")
@@ -668,30 +694,138 @@ class CASESolrClient(SolrClient):
     # AGGREGATED CORPORA FUNCTIONS
     # ======================================================
     def index_aggregated_corpus(self, agg_corpus_name: str, agg_corpus_type: str) -> None:
-        # @TODO: Implement this method
+        
+        # 1. Get full path and stem of the aggregated corpus
+        agg_corpus_to_index = self.path_source / (agg_corpus_name + ".parquet")
+        agg_corpus_logical_name = agg_corpus_to_index.stem.lower()
+        
+        # 2. Create collection
+        _, err = self.create_collection(
+            col_name=agg_corpus_logical_name, config=self.solr_config)
+        if err == 409:
+            self.logger.info(
+                f"-- -- Collection {agg_corpus_logical_name} already exists.")
+            return
+        else:
+            self.logger.info(
+                f"-- -- Collection {agg_corpus_logical_name} successfully created.")
+        
+        # 3. Add aggregated corpus collection to self.agg_corpora_col. If agg_corpora has not been created already, create it
+        _, err = self.create_collection(
+            col_name=self.agg_corpora_col, config=self.solr_config)
+        if err == 409:
+            self.logger.info(
+                f"-- -- Collection {self.agg_corpora_col} already exists.")
+            
+            # 3.1. Do query to retrieve last id in self.agg_corpora_col
+            # http://localhost:8983/solr/#/{self.agg_corpora_col}/query?q=*:*&q.op=OR&indent=true&sort=id desc&fl=id&rows=1&useParams=
+            sc, results = self.execute_query(
+                q='*:*',
+                col_name=self.agg_corpora_col,
+                sort="id desc",
+                rows="1",
+                fl="id")
+            if sc != 200:
+                self.logger.error(
+                    f"-- -- Error getting latest used ID. Aborting operation, setting default value for rows.")
+                return
+            # Increment agg_corpus_id for next agg_corpus to be indexed
+            agg_corpus_id = int(results.docs[0]["id"]) + 1
+        else:
+            self.logger.info(
+                f"Collection {self.agg_corpora_col} successfully created.")
+            agg_corpus_id = 1
+        
+        # 4. Create AggregatedCorpus object and extract info to index
+        agg_corpus = AggregatedCorpus(path_to_raw=agg_corpus_to_index, type=agg_corpus_type)
+        json_docs, model_keys_to_add_to_schema = agg_corpus.get_ag_raw_info()
+        agg_corpus_col_upt = agg_corpus.get_agg_corpora_update(id=agg_corpus_id)
+        
+        # 5. Add field for the doc-tpc distribution associated with the agg_corpus being indexed in the document associated with the corpus
+        for model_key in model_keys_to_add_to_schema:
+            self.logger.info(
+                f"-- -- Adding field {model_key} in {self.corpus_col} collection")
+            _, err = self.add_field_to_schema(
+                col_name=self.agg_corpora_col, field_name=model_key, field_type='VectorField')
+        
+        # 6. Index aggregated corpus and its fields in AGG_CORPORA_COL
+        self.logger.info(
+            f"-- -- Indexing of {agg_corpus_logical_name} info in {self.agg_corpora_col} starts.")
+        self.index_documents(agg_corpus_col_upt, self.agg_corpora_col, self.batch_size)
+        self.logger.info(
+            f"-- -- Indexing of {agg_corpus_logical_name} info in {self.agg_corpora_col} completed.")
+        
+        # 7. Index documents in agg_corpus collection
+        self.logger.info(
+            f"-- -- Indexing of {agg_corpus_logical_name} in {agg_corpus_logical_name} starts.")
+        self.index_documents(json_docs, agg_corpus_logical_name, self.batch_size)
+        self.logger.info(
+            f"-- -- Indexing of {agg_corpus_logical_name} in {agg_corpus_logical_name} completed.")
+        
         return
     
     def delete_aggregated_corpus(self, agg_corpus_name: str) -> None:
-        # @TODO: Implement this method
+        """Deletes the aggregated corpus collection given by 'agg_corpus_name' and removes the document entry of the aggregated corpus in the self.agg_corpora_col collection.
+        
+        Parameters
+        ----------
+        agg_corpus_name : str
+            The string name of the aggregated corpus to be deleted.
+        """
+        
+        # 1. Get stem of the aggregated corpus
+        agg_corpus_to_delete = self.path_source / (agg_corpus_name + ".parquet")
+        agg_corpus_logical_name = agg_corpus_to_delete.stem.lower()
+        
+        # 2. Delete agg_corpus collection
+        _, sc = self.delete_collection(col_name=agg_corpus_logical_name)
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error deleting agg_corpus collection {agg_corpus_logical_name}")
+            return
+        
+        # 3. Get ID and associated models of agg_corpus collection in self.agg_corpora_col
+        sc, results = self.execute_query(
+            q='agg_name:'+agg_corpus_logical_name,
+            col_name=self.agg_corpora_col,
+            fl="id")
+        
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error getting agg_corpus ID. Aborting operation...")
+            return
+        
+        # 4. Remove agg_corpus from self.agg_corpora_col
+        sc = self.delete_doc_by_id(
+            col_name=self.agg_corpora_col, id=results.docs[0]["id"])
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error deleting agg_corpus from {self.agg_corpora_col}")
         return
     
-    def list_aggregated_corpora(self) -> list[str]:
-        # @TODO: Implement this method
-        # create temporal dummy to avoid error
-        return [
-            {
-                "id": "0",
-                "name": "uc3m_researchers",
-                "type": "researcher"
-                
-            },
-            {   
-                "id": "1",
-                "name": "uc3m_research_groups",
-                "type": "research_group"
-            }
-        ]
-
+    def list_ag_collections(self) -> list[str]:
+        """
+        Returns a list of dictionaries with the id, name and type of the aggregated corpus collections that have been created in the Solr server.
+        """
+        sc, results = self.execute_query(
+            q='*:*',
+            col_name=self.agg_corpora_col,
+            fl="id,agg_name,type")
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error getting agg_corpus collections in {self.agg_corpora_col}. Aborting operation...")
+            return
+        
+        ag_colls = []
+        for doc in results.docs:
+            ag_colls.append({
+                "id": doc["id"],
+                "name": doc["agg_name"],
+                "type": doc["type"]
+            })
+            
+        return ag_colls, sc
+        
     # ======================================================
     # AUXILIARY FUNCTIONS
     # ======================================================

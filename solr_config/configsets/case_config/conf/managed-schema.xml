@@ -112,8 +112,12 @@
 
   <field name="id" type="string" indexed="true" stored="true" required="true" multiValued="false" />
   <field name="models" type="string" indexed="true" stored="true" multiValued="true" />
+  <field name="fields" type="string" indexed="true" stored="true" multiValued="true" />
   <field name="SearcheableFields" type="string" indexed="true" stored="true" multiValued="true" />
   <field name="corpus_path" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+  <field name="agg_name" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+  <field name="agg_path" type="string" indexed="true" stored="true" required="false" multiValued="false" />
+  <field name="type" type="string" indexed="true" stored="true" required="false" multiValued="false" />
 
   <!-- docValues are enabled by default for long type so we don't need to index the version field  -->
   <field name="_version_" type="plong" indexed="false" stored="false" />
@@ -129,6 +133,30 @@
   <field name="date" type="pdate" indexed="true" stored="true" multiValued="false" />
   <field name="nwords_per_doc" type="pint" indexed="true" stored="true" multiValued="false" />
   <field name="SearcheableField" type="text_general" indexed="true" stored="true" multiValued="false" />
+
+  <!-- Researchers fields  -->
+  <field name="Name" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Email" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Category" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Campus" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="ORCID" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Scopus" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Department" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="ResearchGroup" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Institute" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Subjects" type="text_general" indexed="true" stored="true" multiValued="true" />
+  <field name="UC3MYears" type="pdate" indexed="true" stored="true" multiValued="false" />
+  <field name="nPI" type="pint" indexed="true" stored="true" multiValued="false" />
+  <field name="nProjects" type="pint" indexed="true" stored="true" multiValued="false" />
+  <field name="nPapers" type="pint" indexed="true" stored="true" multiValued="false" />
+  <field name="researchItems_scipapers" type="text_general" indexed="true" stored="true" multiValued="true" />
+  <field name="researchItems_aei" type="text_general" indexed="true" stored="true" multiValued="true" />
+  <field name="researchItems_cordis" type="text_general" indexed="true" stored="true" multiValued="true" />
+
+  <!-- RG fields  -->
+  <field name="GroupDirector" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="GroupDirectorID" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="ResearcherIDs" type="text_general" indexed="true" stored="true" multiValued="true" />
 
   <!-- cordis fields  -->
   <field name="objective" type="text_general" indexed="true" stored="true" multiValued="false" />
@@ -152,6 +180,36 @@
   <field name="Type_of_Action" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="Expected_Outcome" type="text_general" indexed="true" stored="true" multiValued="false" />
   <field name="Scope" type="text_general" indexed="true" stored="true" multiValued="false" />
+
+  <!-- AEI fields -->
+  <field name="Convocatoria" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Area" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Subarea" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Titulo" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="TituloES" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Resumen" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Entidad" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="CCAA" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="Provincia" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="GeneroIP" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="CIF" type="text_general" indexed="true" stored="true" multiValued="false" />
+
+  <!-- SciPapers fields -->
+  <field name="S2id" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="actID" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name ="pmid" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="doi" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="titleESClean" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="abstractESClean" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="titleLang" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="abstractLang" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="fieldsOfStudy" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="publicationtypes" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="ActivityType" type="text_general" indexed="true" stored="true" multiValued="false" />
+  <field name="isopenaccess" type="boolean" indexed="true" stored="true" multiValued="false" />
+  <field name="referencecount" type="pint" indexed="true" stored="true" multiValued="false" />
+  <field name="citationcount" type="pint" indexed="true" stored="true" multiValued="false" />
+  <field name="influentialcitationcount" type="pint" indexed="true" stored="true" multiValued="false" />
 
   <!-- HFRI fields  -->
   <field name="Summary" type="text_general" indexed="true" stored="true" multiValued="false" />
