@@ -598,10 +598,12 @@ class SolrClient(object):
             results = solr.execute_query('*:*')
         """
 
+        headers = {"Content-Type": "application/json"}
+        params = {"q": q}
+        params.update(kwargs)
+        
         # Prepare query
-        if type.lower() == "get":
-            params = {"q": q}
-            params.update(kwargs)
+        if type.lower() == "get":    
 
             # We want the result of the query as json
             params["wt"] = "json"
@@ -610,23 +612,22 @@ class SolrClient(object):
             self.logger.info(params)
             query_string = parse.urlencode(params)
             
-        else:
-            params = q
-            query_string = parse.urlencode(params)
+            # Construct the URL
+            url_ = '{}/solr/{}/select?{}'.format(self.solr_url, col_name, query_string)
             
-        self.logger.info(query_string)
-
-        # Construct the URL
-        url_ = '{}/solr/{}/select?{}'.format(self.solr_url, col_name, query_string)
-
-        # Set headers for JSON content
-        headers = {"Content-Type": "application/json"}
-
-        if type.lower() == "post" and json_body:
-            # Send query to Solr as a POST request with a JSON body
-            solr_resp = self._do_request(type=type, url=url_, headers=headers, data=json.dumps(json_body))
-        else:
             # Send query to Solr as a GET request or POST without a body
             solr_resp = self._do_request(type=type, url=url_, headers=headers)
+            
+        elif type.lower() == "post" and json_body:
+            # Construct the URL
+            url_ = '{}/solr/{}/select?'.format(self.solr_url, col_name)
+            
+            data = json.dumps(json_body)
+            # Send query to Solr as a POST request with a JSON body
+            solr_resp = self._do_request(type=type, url=url_, headers=headers, data=data)
+            
+        else:
+            self.logger.error(f"-- -- Invalid type {type} or missing json_body")
+            return
 
         return solr_resp.status_code, solr_resp.results

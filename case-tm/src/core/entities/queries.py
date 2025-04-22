@@ -292,6 +292,8 @@ class Queries(object):
             'rows': '{}'
         }
         
+        
+        
     def customize_Q1(self,
                      id: str,
                      model_name: str) -> dict:

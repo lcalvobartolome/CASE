@@ -275,6 +275,28 @@ class CASESolrClient(SolrClient):
             return
 
         return results.docs[0]["EWBdisplayed"], sc
+    
+    def get_AG_fields(self, ag_col: str) -> Union[List, int]:
+        """Returns a list of the fields of the ag collection indicating what metadata will be displayed in the CASE upon user request.
+
+        Parameters
+        ----------
+        ag_col : str
+            Name of the corpus collection whose fields are to be retrieved.
+        sc: int
+            Status code of the request
+        """
+
+        sc, results = self.execute_query(q='agg_name:"'+ag_col+'"',
+                                         col_name=self.agg_corpora_col,
+                                         fl="fields")
+
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error getting fields of {ag_col}. Aborting operation...")
+            return
+
+        return results.docs[0]["fields"], sc
 
     def get_corpus_SearcheableField(self, corpus_col: str) -> Union[List, int]:
         """Returns a list of the fields used for autocompletion in the document search in the similarities function and in the document search function.
@@ -1079,7 +1101,7 @@ class CASESolrClient(SolrClient):
 
         return resp, sc
 
-    def do_Q2(self, corpus_col: str) -> Union[dict, int]:
+    def do_Q2(self, corpus_col: str, type_col: str = "corpus") -> Union[dict, int]:
         """
         Executes query Q2.
 
@@ -1100,7 +1122,15 @@ class CASESolrClient(SolrClient):
         corpus_col = corpus_col.lower()
 
         # 1. Check that corpus_col is indeed a corpus collection
-        if not self.check_is_corpus(corpus_col):
+        if type_col == "corpus":
+            if not self.check_is_corpus(corpus_col):
+                return
+        elif type_col == "ag":
+            if not self.check_is_ag_corpus(corpus_col):
+                return
+        else:
+            self.logger.error(
+                f"-- -- {corpus_col} is not a corpus collection. Aborting operation...")
             return
 
         # 2. Execute query (to self.corpus_col)
@@ -1115,17 +1145,14 @@ class CASESolrClient(SolrClient):
             return
 
         # 3. Get EWBdisplayed fields of corpus_col
-        EWBdisplayed, sc = self.get_corpus_EWBdisplayed(corpus_col)
+        fields_displayed, sc = self.get_corpus_EWBdisplayed(corpus_col) if type_col == "corpus" else self.get_AG_fields(corpus_col)
+        
         if sc != 200:
             self.logger.error(
-                f"-- -- Error getting EWBdisplayed of {corpus_col}. Aborting operation...")
+                f"-- -- Error getting fields_displayed of {corpus_col}. Aborting operation...")
             return
 
-        # 4. Filter metadata fields to be displayed in the CASE
-        #meta_fields = [field for field in results.docs[0]
-        #               ['fields'] if field in EWBdisplayed]
-
-        return {'metadata_fields': EWBdisplayed}, sc
+        return {'metadata_fields': fields_displayed}, sc
 
     def do_Q3(self, col: str) -> Union[dict, int]:
         """Executes query Q3.
@@ -2080,7 +2107,7 @@ class CASESolrClient(SolrClient):
         params = {k: v for k, v in q18.items() if k != 'q'}
 
         sc, results = self.execute_query(
-            q=q18['q'], col_name=corpus_col, **params)
+            q=q18['q'], col_name=corpus_col, type="get", **params)
 
         if sc != 200:
             self.logger.error(
@@ -2245,21 +2272,26 @@ class CASESolrClient(SolrClient):
         proportion_key = "payload(agg_rel_{},t{})".format(model_name, topic_id)
         for dict in results.docs:
             if proportion_key in dict.keys():
-                dict["topic_relevance"] = dict.pop(proportion_key)
+                dict["topic_relevance"] = dict.pop(proportion_key) * 100
                 
-                # for each el in researchItems_, we need to make a Q18 query
-                dict_bow, sc = self.do_Q18(
-                    corpus_col=corpus_name,
-                    ids=dict[f"researchItems_{corpus_name}"],
-                    words=",".join(words.split(", ")),
-                    start=start,
-                    rows=rows)
+                ids_to_query = dict[f"researchItems_{corpus_name}"]
+                # divide ids_to_query into chunks of 100, but the last chunk where we just keep the remaining elements
+                ids_to_query = [ids_to_query[i:i + 100] for i in range(0, len(ids_to_query), 100)]
                 
                 aggregated = defaultdict(list)
-                for dict_bow_ in dict_bow:
-                    for key, value in dict_bow_.items():
-                        if key.startswith("payload(bow,"):
-                            aggregated[key].append(value)
+                for this_ids_to_query in ids_to_query:
+                    # for each el in researchItems_, we need to make a Q18 query
+                    dict_bow, sc = self.do_Q18(
+                        corpus_col=corpus_name,
+                        ids=this_ids_to_query,
+                        words=",".join(words.split(", ")),
+                        start=start,
+                        rows=rows)
+        
+                    for dict_bow_ in dict_bow:
+                        for key, value in dict_bow_.items():
+                            if key.startswith("payload(bow,"):
+                                aggregated[key].append(value)
 
                 # Now sum values for each key
                 summed = {k: sum(v) for k, v in aggregated.items()}
@@ -2273,4 +2305,53 @@ class CASESolrClient(SolrClient):
                 del dict[proportion_key]
                 del dict["dict_bow"]
             
+        return results.docs, sc
+    
+    
+    def do_Q21(
+        self,
+        agg_corpus_col: str,
+        doc_id: str) -> Union[dict, int]:
+        """Executes query Q6, but for AggregatedCorpora.
+        
+        Parameters
+        ----------
+        corpus_col: str
+            Name of the corpus collection
+        doc_id: str
+            ID of the document whose metadata is going to be retrieved
+
+        Returns
+        -------
+        json_object: dict
+            JSON object with the results of the query.
+        sc : int
+            The status code of the response.
+        """
+
+        # 0. Convert corpus name to lowercase
+        agg_corpus_col = agg_corpus_col.lower()
+
+        # 1. Check that corpus_col is indeed a corpus collection
+        if not self.check_is_ag_corpus(agg_corpus_col):
+            return
+
+        # 2. Get meta fields
+        meta_fields_dict, sc = self.do_Q2(agg_corpus_col,type_col="ag")
+        meta_fields = ','.join(meta_fields_dict['metadata_fields'])
+        
+        self.logger.info("-- -- These are the meta fields: " + meta_fields)
+
+        # 3. Execute query
+        q6 = self.querier.customize_Q6(id=doc_id, meta_fields=meta_fields)
+        params = {k: v for k, v in q6.items() if k != 'q'}
+
+        sc, results = self.execute_query(
+            q=q6['q'], col_name=agg_corpus_col, **params)
+
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error executing query Q21. Aborting operation...")
+            return
+
         return results.docs, sc

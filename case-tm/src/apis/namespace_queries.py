@@ -571,9 +571,9 @@ class getTopicStatistics(Resource):
 # corpus_collection, model_name, topic_id, start, rows
 getTopicTopResearchers_parser = reqparse.RequestParser()
 getTopicTopResearchers_parser.add_argument(
-    'corpus_collection', help='Name of the corpus collection', required=True)
+    'corpus_collection', help='Name of the corpus collection', required=False)
 getTopicTopResearchers_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 getTopicTopResearchers_parser.add_argument(
     'topic_id', help="ID of the topic whose top researchers are being searched", required=True)
 getTopicTopResearchers_parser.add_argument(
@@ -611,9 +611,9 @@ class getTopicTopResearchers(Resource):
 # similar tp getTopicTopResearchers, but for Research Groups
 getTopicTopRGs_parser = reqparse.RequestParser()
 getTopicTopRGs_parser.add_argument(
-    'corpus_collection', help='Name of the corpus collection', required=True)
+    'corpus_collection', help='Name of the corpus collection', required=False)
 getTopicTopRGs_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 getTopicTopRGs_parser.add_argument(
     'topic_id', help="ID of the topic whose top research groups are being searched", required=True)
 getTopicTopRGs_parser.add_argument(
@@ -662,21 +662,22 @@ class getMetadataAGByID(Resource):
         id = args['id']
         
         # one of the two must be provided
-        if not ag_collection and not id:
-            return {"error": "One of the two parameters must be provided"}, 400
+        # if not ag_collection and not id:
+        #    return {"error": "One of the two parameters must be provided"}, 400
         
-        file_r = f"/case-tm/src/apis/dummies/getMetadataAGByID_r_{id}.json"
-        file_rg = f"/case-tm/src/apis/dummies/getMetadataAGByID_rg_{id}.json"
+        # file_r = f"/case-tm/src/apis/dummies/getMetadataAGByID_r_{id}.json"
+        # file_rg = f"/case-tm/src/apis/dummies/getMetadataAGByID_rg_{id}.json"
         
         # one of the two files must exist
-        if ag_collection.lower() == "uc3m_researchers":
-            file = file_r
-        elif ag_collection.lower() == "uc3m_research_groups":
-            file = file_rg
+        #if ag_collection.lower() == "uc3m_researchers":
+        #    file = file_r
+        #elif ag_collection.lower() == "uc3m_research_groups":
+        #    file = file_rg
         try:
-            with open(file, "r") as file:
-                data = json.load(file)
-            return data, 200
+            #with open(file, "r") as file:
+            #    data = json.load(file)
+            return sc.do_Q21(agg_corpus_col=ag_collection,
+                            doc_id=id)
         except Exception as e:
             return {"error": str(e)}, 500
 

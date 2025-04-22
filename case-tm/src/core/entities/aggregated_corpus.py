@@ -115,16 +115,14 @@ class AggregatedCorpus(object):
                     rpr = rpr.rstrip()
                     
                 return rpr if mean_vector is not None else "" 
-            
+                        
             def get_topic_rel(items):
                 indices = [id_to_index[pid] for pid in items if pid in id_to_index]
                 
                 if not indices:
-                    #return [0.0] * thetas.shape[1]
                     return ""
 
                 thetas_indices = thetas[indices]
-
                 dense = thetas_indices.toarray()
 
                 topic_sums = dense.sum(axis=0)
@@ -132,17 +130,23 @@ class AggregatedCorpus(object):
                 # Apply penalty
                 penalty = math.log(len(indices) + 1)
                 topic_rels = topic_sums / penalty
-                
+
+                # Normalize with respect to top-1
+                max_val = topic_rels.max()
+                if max_val > 0:
+                    topic_rels = topic_rels / max_val
+
                 topic_rels = topic_rels.tolist()
-                
-                # transform to string representation
+
+                # Transform to string representation
                 rel = ""
                 for idx, val in enumerate(topic_rels):
                     if val != 0:
-                        rel += "t" + str(idx) + "|" + str(val) + " "
+                        rel += f"t{idx}|{val} "
                 rel = rel.rstrip()
 
                 return rel
+
             
             for model_path in model_paths:
                 
