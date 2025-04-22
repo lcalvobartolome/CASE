@@ -510,7 +510,7 @@ class getBOWbyDocsIDs(Resource):
 
         try:
             return sc.do_Q18(corpus_col=corpus_name,
-                            ids=ids,
+                            ids=ids.split(","),
                             words=words,
                             start=start,
                             rows=rows,)
@@ -594,9 +594,14 @@ class getTopicTopResearchers(Resource):
         
         try:
             # @TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getTopicTopResearchers.json", "r") as file:
-                data = json.load(file)
-            return data, 200
+            #with open("/case-tm/src/apis/dummies/getTopicTopResearchers.json", "r") as file:
+            #    data = json.load(file)
+            #return data, 200
+            return sc.do_Q20(agg_corpus_col="uc3m_researchers",#corpus_collection,
+                            model_name=model_name,
+                            topic_id=topic_id,
+                            start=start,
+                            rows=rows)
         except Exception as e:
             return {"error": str(e)}, 500
         
@@ -628,10 +633,15 @@ class getTopicTopRGs(Resource):
         rows = args['rows']
         
         try:
-            # @TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getTopicTopRGs.json", "r") as file:
-                data = json.load(file)
-            return data, 200
+            ## @TODO: Implement this query
+            #with open("/case-tm/src/apis/dummies/getTopicTopRGs.json", "r") as file:
+            #    data = json.load(file)
+            #return data, 200
+            return sc.do_Q20(agg_corpus_col="uc3m_research_groups",#corpus_collection,
+                            model_name=model_name,
+                            topic_id=topic_id,
+                            start=start,
+                            rows=rows)
         except Exception as e:
             return {"error": str(e)}, 500
 

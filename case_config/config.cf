@@ -80,5 +80,9 @@ SearcheableField=title
 
 [aggregated-config]
 scipapers=/data/source/SciPapers_TM_40tpc
-aei=/data/source/AEI_TM_25tpc
+aei=/data/source/AEI_TM_25tpc,/data/source/AEI_TM_50tpc
 cordis=/data/source/cordis_TM_50tpc
+SciPapers_TM_40tpc=scipapers
+aei_tm_25tpc=aei
+aei_tm_50tpc=aei
+cordis_tm_50tpc=cordis

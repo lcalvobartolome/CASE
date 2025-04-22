@@ -88,24 +88,12 @@ class AggregatedCorpus(object):
         self.fields = df.columns.tolist()
         model_keys_to_add_to_schema = []
         for col in cols_research_items:
+            
             self._logger.info(f"Processing column {col}")
             
             model = col.split("researchItems_")[1]
-            model_path = pathlib.Path(self.cf.get("aggregated-config", model))
-            thetas = sparse.load_npz((model_path / 'TMmodel/thetas.npz'))
-            
-            tpc_rpr_key = 'agg_tpc_' + model.lower()
-            tpc_rel_key = 'agg_rel_' + model.lower()
-            model_keys_to_add_to_schema.append(tpc_rpr_key)
-            model_keys_to_add_to_schema.append(tpc_rel_key)
-            
-            self.models.append(model.lower())
-            
-            # ids of publications / projects, etc.
-            with open((model_path / 'corpus.txt'), "r", encoding="utf-8") as f:
-                ids = [line.strip().split()[0] for line in f]
-            
-            id_to_index = {pid: idx for idx, pid in enumerate(ids)}
+            ass_models = self.cf.get("aggregated-config", model).split(",")
+            model_paths = [pathlib.Path(m) for m in ass_models]
             
             def get_topics_rpr(items, max_sum=1000):
                 """Get the topics for a given list of items."""
@@ -127,11 +115,6 @@ class AggregatedCorpus(object):
                     rpr = rpr.rstrip()
                     
                 return rpr if mean_vector is not None else "" 
-            
-            df[tpc_rpr_key] = df[col].apply(lambda x: get_topics_rpr(x))
-            
-            self._logger.info(f"Topics for {col} calculated.")
-            self._logger.info(f"{df[['id', tpc_rpr_key]].head()}")
             
             def get_topic_rel(items):
                 indices = [id_to_index[pid] for pid in items if pid in id_to_index]
@@ -161,10 +144,37 @@ class AggregatedCorpus(object):
 
                 return rel
             
-            df[tpc_rel_key] = df[col].apply(lambda x: get_topic_rel(x))
-            
-            self._logger.info(f"Topic relevance for {col} calculated.")
-            self._logger.info(f"{df[['id', tpc_rel_key]].head()}")
+            for model_path in model_paths:
+                
+                try:
+                    thetas = sparse.load_npz((model_path / 'TMmodel/thetas.npz'))
+                    
+                    tpc_rpr_key = 'agg_tpc_' + model_path.stem.lower()
+                    tpc_rel_key = 'agg_rel_' + model_path.stem.lower()
+                    model_keys_to_add_to_schema.append(tpc_rpr_key)
+                    model_keys_to_add_to_schema.append(tpc_rel_key)
+                    
+                    self.models.append(model_path.stem.lower())
+                    
+                    # ids of publications / projects, etc.
+                    with open((model_path / 'corpus.txt'), "r", encoding="utf-8") as f:
+                        ids = [line.strip().split()[0] for line in f]
+                    
+                    id_to_index = {pid: idx for idx, pid in enumerate(ids)}
+                    
+                    df[tpc_rpr_key] = df[col].apply(lambda x: get_topics_rpr(x))
+                    
+                    self._logger.info(f"Topics for {col} calculated.")
+                    self._logger.info(f"{df[['id', tpc_rpr_key]].head()}")    
+                    
+                    df[tpc_rel_key] = df[col].apply(lambda x: get_topic_rel(x))
+                    
+                    self._logger.info(f"Topic relevance for {col} calculated.")
+                    self._logger.info(f"{df[['id', tpc_rel_key]].head()}")
+                    
+                except Exception as e:
+                    self._logger.error(f"Error processing model {model_path.stem.lower()}: {e}")
+                    continue
             
         json_str = df.to_json(orient='records')
         json_lst = json.loads(json_str)

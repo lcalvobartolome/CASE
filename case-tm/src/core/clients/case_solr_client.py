@@ -5,7 +5,9 @@ Author: Lorena Calvo-Bartolomé
 Date: 17/04/2023
 """
 
+from collections import defaultdict
 import configparser
+import difflib
 import json
 import logging
 import pathlib
@@ -40,7 +42,7 @@ class CASESolrClient(SolrClient):
         self.betas_max_sum = int(cf.get('restapi', 'betas_max_sum'))
         self.path_source = pathlib.Path(cf.get('restapi', 'path_source'))
         self.added_fields = set()
-        
+        self.cf = cf
         # Create Queries object for managing queries
         self.querier = Queries()
 
@@ -63,7 +65,7 @@ class CASESolrClient(SolrClient):
                 f"-- -- Field {field_name} added to {col_name} collection.")
             self.added_fields.add(field_name)
         else:
-            self.logger.error(
+            self.logger.warning(
                 f"-- -- Error adding field {field_name} to {col_name} collection. Aborting operation...")
         
         return res, sc
@@ -408,13 +410,28 @@ class CASESolrClient(SolrClient):
         """
 
         ag_corpus_colls, _ = self.list_ag_collections()
-        ag_corpus_colls_names = [
-            ag_corpus["agg_name"] for ag_corpus in ag_corpus_colls]
-        if agg_corpus_col not in ag_corpus_colls_names:
+        """
+        ag_corpus_colls has this format:
+        [
+            {
+                "id": "1",
+                "name": "uc3m_researchers",
+                "type": "researcher"
+            },
+            {
+                "id": "2",
+                "name": "uc3m_research_groups",
+                "type": "research_group"
+            }
+            ]
+        """
+        
+        ag_corpus_colls = [
+            ag_corpus for ag_corpus in ag_corpus_colls if ag_corpus["name"] == agg_corpus_col]
+        if len(ag_corpus_colls) == 0:
             self.logger.error(
                 f"-- -- {agg_corpus_col} is not an aggregated corpus collection. Aborting operation...")
             return False
-
         return True
     
     def check_ag_corpus_has_model(self, agg_corpus_col, model_name) -> bool:
@@ -437,11 +454,12 @@ class CASESolrClient(SolrClient):
         
         # keep instances of ag_corpus_colls with the same name as the one given by agg_corpus_col
         ag_corpus_colls = [
-            ag_corpus for ag_corpus in ag_corpus_colls if ag_corpus["agg_name"] == agg_corpus_col]
+            ag_corpus for ag_corpus in ag_corpus_colls if ag_corpus["name"] == agg_corpus_col]
         
+        self.logger.info(f"-- -- {agg_corpus_col} has the following cols: {ag_corpus_colls}")
         ag_corpus_colls_models = [
-            ag_corpus["models"] for ag_corpus in ag_corpus_colls]
-        
+            ag_corpus["models"] for ag_corpus in ag_corpus_colls][0]
+        self.logger.info(f"-- -- {agg_corpus_col} has the following models: {ag_corpus_colls_models}")
         if model_name not in ag_corpus_colls_models:
             self.logger.error(
                 f"-- -- {agg_corpus_col} does not have the model {model_name}. Aborting operation...")
@@ -868,7 +886,7 @@ class CASESolrClient(SolrClient):
         sc, results = self.execute_query(
             q='*:*',
             col_name=self.agg_corpora_col,
-            fl="id,agg_name,type")
+            fl="id,agg_name,type,models")
         if sc != 200:
             self.logger.error(
                 f"-- -- Error getting agg_corpus collections in {self.agg_corpora_col}. Aborting operation...")
@@ -879,7 +897,8 @@ class CASESolrClient(SolrClient):
             ag_colls.append({
                 "id": doc["id"],
                 "name": doc["agg_name"],
-                "type": doc["type"]
+                "type": doc["type"],
+                "models": doc["models"] if "models" in doc else []
             })
             
         return ag_colls, sc
@@ -1549,7 +1568,7 @@ class CASESolrClient(SolrClient):
                 
         dict_bow, sc = self.do_Q18(
             corpus_col=corpus_col,
-            ids=",".join([d['id'] for d in results.docs]),
+            ids=[d['id'] for d in results.docs],
             words=",".join(words.split(", ")),
             start=start,
             rows=rows)
@@ -2054,7 +2073,7 @@ class CASESolrClient(SolrClient):
         # 2. Execute query
         start, rows = self.custom_start_and_rows(start, rows, corpus_col)
         q18 = self.querier.customize_Q18(
-            ids=ids.split(","),
+            ids=ids,#.split(","),
             words=words.split(","),
             start=start,
             rows=rows)
@@ -2175,8 +2194,10 @@ class CASESolrClient(SolrClient):
             rows = "100"
 
         # 5. Execute query
+        corpus_name = self.cf.get("aggregated-config", model_name)
         q20 = self.querier.customize_Q20(
             model_name=model_name,
+            corpus_name=corpus_name,
             topic_id=topic_id,
             start=start,
             rows=rows)
@@ -2189,14 +2210,8 @@ class CASESolrClient(SolrClient):
             self.logger.error(
                 f"-- -- Error executing query Q20. Aborting operation...")
             return
-
-        # 6. Return a dictionary with names more understandable to the end user
-        proportion_key = "payload(agg_rel_{},t{})".format(model_name, topic_id)
-        for dict in results.docs:
-            if proportion_key in dict.keys():
-                dict["topic_relevance"] = proportion_key
-
-        # 7. Get the topic's top words
+        
+        # 6. Get the topic's top words
         start_model, rows_model = self.custom_start_and_rows(start, None, model_name)
         q10_results, sc = self.do_Q10(
             model_col=model_name,
@@ -2206,7 +2221,7 @@ class CASESolrClient(SolrClient):
         
         if sc != 200:
             self.logger.error(
-                f"-- -- Error executing query Q10 when using in Q9. Aborting operation...")
+                f"-- -- Error executing query Q10 when using in Q20. Aborting operation...")
             return
         
         for topic in q10_results:
@@ -2214,15 +2229,8 @@ class CASESolrClient(SolrClient):
             if this_tpc_id == topic_id:
                 words = topic['tpc_descriptions']
                 break
-                
-        dict_bow, sc = self.do_Q18(
-            corpus_col=corpus_col,
-            ids=",".join([d['id'] for d in results.docs]),
-            words=",".join(words.split(", ")),
-            start=start,
-            rows=rows)
         
-        # 7. Merge results
+        # 7. Build final dict
         def replace_payload_keys(dictionary):
             new_dict = {}
             for key, value in dictionary.items():
@@ -2234,31 +2242,35 @@ class CASESolrClient(SolrClient):
                 new_dict[new_key] = value
             return new_dict
         
-        merged_tpcs = []
-        try:
-            for d1 in results.docs:
-                id_value = d1['id']
+        proportion_key = "payload(agg_rel_{},t{})".format(model_name, topic_id)
+        for dict in results.docs:
+            if proportion_key in dict.keys():
+                dict["topic_relevance"] = dict.pop(proportion_key)
                 
-                # Try to find the corresponding dictionary in dict_bow, return None if not found
-                d2 = next((item for item in dict_bow if item["id"] == id_value), None)
+                # for each el in researchItems_, we need to make a Q18 query
+                dict_bow, sc = self.do_Q18(
+                    corpus_col=corpus_name,
+                    ids=dict[f"researchItems_{corpus_name}"],
+                    words=",".join(words.split(", ")),
+                    start=start,
+                    rows=rows)
                 
-                # If d2 is None, log a warning and skip this entry
-                if d2 is None:
-                    self.logger.warning(f"No match found in dict_bow for id: {id_value}")
-                    continue
-                
-                # Create the new dictionary with safe lookups
-                new_dict = {
-                    "id": id_value,
-                    "topic_relevance": d1.get("topic_relevance", 0),
-                    "num_words_per_doc": d1.get("num_words_per_doc", 0),
-                    # Only include keys in replace_payload_keys if they exist in d2
-                    "counts": replace_payload_keys({key: d2.get(key) for key in d2 if key.startswith("payload(bow,")})
-                }
+                aggregated = defaultdict(list)
+                for dict_bow_ in dict_bow:
+                    for key, value in dict_bow_.items():
+                        if key.startswith("payload(bow,"):
+                            aggregated[key].append(value)
 
-                merged_tpcs.append(new_dict)
-        except Exception as e:
-            self.logger.error(f"Error merging results: {e}")
-            return
+                # Now sum values for each key
+                summed = {k: sum(v) for k, v in aggregated.items()}
 
-        return merged_tpcs, sc
+                # Optionally apply replace_payload_keys
+                dict["counts"] = replace_payload_keys(summed)
+        
+        # remove proportion_key from the dict
+        for dict in results.docs:
+            if proportion_key in dict.keys():
+                del dict[proportion_key]
+                del dict["dict_bow"]
+            
+        return results.docs, sc

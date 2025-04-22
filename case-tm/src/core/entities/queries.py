@@ -259,7 +259,7 @@ class Queries(object):
         # # Get the bag of words of a list of documents (ids)
         # ================================================================
         self.Q18 = {
-            'q': 'id:{}',
+            'q': 'id:{} OR', #here a list of ids comes and then we format it with 'OR' separator times the number of ids
             'fl': 'payload(bow,{})',
         }
 
@@ -287,15 +287,7 @@ class Queries(object):
         self.Q20 = {
             'q': '*:*',
             'sort': 'payload(agg_rel_{},t{}) desc',
-            'fl': 'payload(agg_rel_{},t{}), id, researchItems_{}',
-            'start': '{}',
-            'rows': '{}'
-        }
-
-        self.Q21 = {
-            'q': 'id:{} OR', #here a list of ids comes and then we format it with 'OR' separator times the number of ids
-            'sort': 'nwords_per_doc desc',
-            'fl': 'id, bow, nwords_per_doc',
+            'fl': 'id,payload(agg_rel_{},t{}),researchItems_{}',
             'start': '{}',
             'rows': '{}'
         }
@@ -783,22 +775,30 @@ class Queries(object):
 
         return custom_q17
     
-    def customize_Q18(self,
-                      ids: str,
-                      words: str,
-                      start:str,
-                      rows: str) -> dict:
-    
+    def customize_Q18(
+        self,
+        ids: List[str],
+        words: str,
+        start:str,
+        rows: str) -> dict:
+
+        ids_formatted = []
+        for i in range(len(ids)):
+            if i != len(ids) - 1:
+                ids_formatted.append(self.Q18['q'].format(ids[i]))
+            else:
+                # remove the last 'OR'
+                ids_formatted.append(self.Q18['q'].format(ids[i])[:-3])
+        ids_formatted = ' '.join(ids_formatted)
         
         custom_q18 = {
-            'q':  self.Q18['q'].format(' & id:'.join(ids)),
+            'q':  ids_formatted,
             'fl': 'id, ' + ', '.join(self.Q18['fl'].format(word) for word in words),
             'start': self.Q16['start'].format(start),
             'rows': self.Q16['rows'].format(rows),
         }
-
+        
         return custom_q18
-    
 
     def customize_Q19(self,
                       start: str,
@@ -833,6 +833,7 @@ class Queries(object):
     def customize_Q20(
         self,
         model_name: str,
+        corpus_name: str,
         topic_id: str,
         start: str,
         rows: str,
@@ -841,32 +842,8 @@ class Queries(object):
         custom_q20 = {
             'q': self.Q20['q'],
             'sort': self.Q20['sort'].format(model_name, topic_id),
-            'fl': self.Q20['fl'].format(model_name, topic_id, model_name),
+            'fl': self.Q20['fl'].format(model_name, topic_id, corpus_name),
             'start': self.Q20['start'].format(start),
             'rows': self.Q20['rows'].format(rows),
         }
         return custom_q20
-    
-    def customize_Q21(
-        self,
-        ids: List[str],
-        start: str,
-        rows: str,
-    ):
-        ids_formatted = []
-        for i in range(len(ids)):
-            if i != len(ids) - 1:
-                ids_formatted.append(self.Q21['q'].format(ids[i]))
-            else:
-                # remove the last 'OR'
-                ids_formatted.append(self.Q21['q'].format(ids[i])[:-3])
-        ids_formatted = ' '.join(ids_formatted)
-        
-        custom_q21 = {
-            'q': ids_formatted,
-            'sort': self.Q21['sort'],
-            'fl': self.Q21['fl'],
-            'start': self.Q21['start'].format(start),
-            'rows': self.Q21['rows'].format(rows),
-        }
-        return custom_q21
