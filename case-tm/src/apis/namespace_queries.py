@@ -223,7 +223,8 @@ class getCorpusMetadataFields(Resource):
         args = q2_parser.parse_args()
         corpus_collection = args['corpus_collection']
         try:
-            return sc.do_Q2(corpus_col=corpus_collection)
+            type_col = "ag" if "uc3m" in corpus_collection else "corpus"
+            return sc.do_Q2(corpus_col=corpus_collection, type_col=type_col)
         except Exception as e:
             return str(e), 500
 

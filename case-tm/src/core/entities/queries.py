@@ -287,7 +287,7 @@ class Queries(object):
         self.Q20 = {
             'q': '*:*',
             'sort': 'payload(agg_rel_{},t{}) desc',
-            'fl': 'id,payload(agg_rel_{},t{}),researchItems_{}',
+            'fl': 'id,Name,payload(agg_rel_{},t{}),researchItems_{}',
             'start': '{}',
             'rows': '{}'
         }

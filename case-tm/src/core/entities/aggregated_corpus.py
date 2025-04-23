@@ -85,7 +85,7 @@ class AggregatedCorpus(object):
         self._logger.info("Calculating topics for each row...")
         cols_research_items = [col for col in df.columns if "researchItems" in col]
         self.models = []
-        self.fields = df.columns.tolist()
+        self.fields = [col for col in  df.columns.tolist() if "researchItems" not in col]
         model_keys_to_add_to_schema = []
         for col in cols_research_items:
             
@@ -118,9 +118,9 @@ class AggregatedCorpus(object):
                         
             def get_topic_rel(items):
                 indices = [id_to_index[pid] for pid in items if pid in id_to_index]
-                
+                                
                 if not indices:
-                    return ""
+                    return [0.0] * thetas.shape[1]
 
                 thetas_indices = thetas[indices]
                 dense = thetas_indices.toarray()
@@ -131,22 +131,15 @@ class AggregatedCorpus(object):
                 penalty = math.log(len(indices) + 1)
                 topic_rels = topic_sums / penalty
 
-                # Normalize with respect to top-1
-                max_val = topic_rels.max()
-                if max_val > 0:
-                    topic_rels = topic_rels / max_val
-
-                topic_rels = topic_rels.tolist()
-
-                # Transform to string representation
+                return topic_rels.tolist()
+            
+            def get_tpc_rel_str(topic_rel):
+                """Get the topic relevance string."""                
                 rel = ""
-                for idx, val in enumerate(topic_rels):
+                for idx, val in enumerate(topic_rel):
                     if val != 0:
                         rel += f"t{idx}|{val} "
-                rel = rel.rstrip()
-
-                return rel
-
+                return rel.rstrip()
             
             for model_path in model_paths:
                 
@@ -172,6 +165,16 @@ class AggregatedCorpus(object):
                     self._logger.info(f"{df[['id', tpc_rpr_key]].head()}")    
                     
                     df[tpc_rel_key] = df[col].apply(lambda x: get_topic_rel(x))
+                    
+                    # normalize the topic relevance
+                    tpc_rels = np.array(df[tpc_rel_key].tolist())
+                    tpc_rels_pct = (tpc_rels / np.max(tpc_rels, axis=0))
+                    
+                    # save tpc_rels_pct back to df
+                    df[tpc_rel_key] = tpc_rels_pct.tolist()
+                    
+                    # convert to str
+                    df[tpc_rel_key] = df[tpc_rel_key].apply(lambda x: get_tpc_rel_str(x))
                     
                     self._logger.info(f"Topic relevance for {col} calculated.")
                     self._logger.info(f"{df[['id', tpc_rel_key]].head()}")

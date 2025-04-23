@@ -2273,6 +2273,9 @@ class CASESolrClient(SolrClient):
         for dict in results.docs:
             if proportion_key in dict.keys():
                 dict["topic_relevance"] = dict.pop(proportion_key) * 100
+                dict["name"] = dict["Name"]
+                #dict["name"] = dict["Name"]
+                #dict["title"] = dict["Name"]
                 
                 ids_to_query = dict[f"researchItems_{corpus_name}"]
                 # divide ids_to_query into chunks of 100, but the last chunk where we just keep the remaining elements
@@ -2304,6 +2307,7 @@ class CASESolrClient(SolrClient):
             if proportion_key in dict.keys():
                 del dict[proportion_key]
                 del dict["dict_bow"]
+                del dict["Name"]
             
         return results.docs, sc
     
