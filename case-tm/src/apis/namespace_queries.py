@@ -8,6 +8,7 @@ Date: 13/04/2023
 import json
 import pathlib
 from flask_restx import Namespace, Resource, reqparse
+from flask import jsonify
 from src.core.clients.case_solr_client import CASESolrClient
 
 # ======================================================
@@ -57,7 +58,7 @@ q5_parser = reqparse.RequestParser()
 q5_parser.add_argument(
     'corpus_collection', help='Name of the corpus collection', required=True)
 q5_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 q5_parser.add_argument(
     'doc_id', help="ID of the document whose similarity is going to be checked against all other documents in 'corpus_collection'", required=True)
 q5_parser.add_argument(
@@ -143,7 +144,7 @@ q14_parser = reqparse.RequestParser()
 q14_parser.add_argument(
     'corpus_collection', help='Name of the corpus collection', required=True)
 q14_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 q14_parser.add_argument(
     'text_to_infer', help="Text to be inferred", required=True)
 q14_parser.add_argument(
@@ -252,7 +253,7 @@ class getDocsWithThetasLargerThanThr(Resource):
         threshold = args['threshold']
         start = args['start']
         rows = args['rows']
-
+                
         try:
             return sc.do_Q4(corpus_col=corpus_collection,
                             model_name=model_name,
@@ -309,12 +310,15 @@ class getDocsWithString(Resource):
         string = args['string']
         start = args['start']
         rows = args['rows']
+        
+        type_col = "ag" if "uc3m" in corpus_collection else "corpus"
 
         try:
             return sc.do_Q7(corpus_col=corpus_collection,
                             string=string,
                             start=start,
-                            rows=rows)
+                            rows=rows,
+                            type_col=type_col)
         except Exception as e:
             return str(e), 500
 
@@ -547,7 +551,7 @@ getTopicStatistics_parser = reqparse.RequestParser()
 getTopicStatistics_parser.add_argument(
     'corpus_collection', help='Name of the corpus collection', required=True)
 getTopicStatistics_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=True)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 getTopicStatistics_parser.add_argument(
     'topic_id', help='ID of the topic whose statistics are being searched', required=True)
 @api.route('/getTopicStatistics/')
@@ -555,14 +559,41 @@ class getTopicStatistics(Resource):
     @api.doc(parser=getTopicStatistics_parser)
     def get(self):
         args = getTopicStatistics_parser.parse_args()
-        corpus_collection = args['corpus_collection']
-        model_name = args['model_name']
-        topic_id = args['topic_id']
+        corpus_collection = args['corpus_collection'].lower()
+        model_name = args['model_name'].lower()
+        topic_id_raw = args.get('topic_id')
+        topic_id = topic_id_raw.split("t")[-1] if topic_id_raw and "t" in topic_id_raw else topic_id_raw
+
+        # Validate corpus and model
+        if not sc.check_is_corpus(corpus_collection):
+            return {"error": f"Corpus collection '{corpus_collection}' not found."}, 404
+        if not sc.check_corpus_has_model(corpus_collection, model_name):
+            return {"error": f"Model '{model_name}' not found in corpus collection '{corpus_collection}'."}, 404
+
+        # Locate the model folder
+        source_path = pathlib.Path("/data/source")
+        matching_folders = [f for f in source_path.iterdir() if f.is_dir() and f.name.lower() == model_name]
+        if not matching_folders:
+            return {"error": f"No matching topic statistics information found for model '{model_name}'."}, 404
+        matched_folder = matching_folders[0]
+        
+        if not (matched_folder / "topicStatistics.json").exists():
+            return {}, 200
+            #return {"error": f"No topic statistics information found for model '{model_name}'."}, 404
 
         try:
-            with open("/case-tm/src/apis/dummies/getTopicStatistics.json", "r") as file:
+            with open(matched_folder / "topicStatistics.json", "r") as file:
                 data = json.load(file)
-            return data, 200
+
+            # Convert topic_id to int and return corresponding entry
+            topic_id = int(topic_id)
+            if topic_id < 0 or topic_id >= len(data):
+                return {"error": f"Topic ID {topic_id} is out of range."}, 400
+
+            return data[topic_id], 200
+
+        except ValueError:
+            return {"error": "Invalid topic_id. Must be an integer or of the form 'tN'."}, 400
         except Exception as e:
             return {"error": str(e)}, 500
 
@@ -594,15 +625,11 @@ class getTopicTopResearchers(Resource):
         rows = args['rows']
         
         try:
-            # @TODO: Implement this query
-            #with open("/case-tm/src/apis/dummies/getTopicTopResearchers.json", "r") as file:
-            #    data = json.load(file)
-            #return data, 200
-            return sc.do_Q20(agg_corpus_col="uc3m_researchers",#corpus_collection,
-                            model_name=model_name,
-                            topic_id=topic_id,
-                            start=start,
-                            rows=rows)
+            return sc.do_Q20(
+                agg_corpus_col="uc3m_researchers",                model_name=model_name,
+                topic_id=topic_id,
+                start=start,
+                rows=rows)
         except Exception as e:
             return {"error": str(e)}, 500
         
@@ -634,15 +661,12 @@ class getTopicTopRGs(Resource):
         rows = args['rows']
         
         try:
-            ## @TODO: Implement this query
-            #with open("/case-tm/src/apis/dummies/getTopicTopRGs.json", "r") as file:
-            #    data = json.load(file)
-            #return data, 200
-            return sc.do_Q20(agg_corpus_col="uc3m_research_groups",#corpus_collection,
-                            model_name=model_name,
-                            topic_id=topic_id,
-                            start=start,
-                            rows=rows)
+            return sc.do_Q20(
+                agg_corpus_col="uc3m_research_groups",
+                model_name=model_name,
+                topic_id=topic_id,
+                start=start,
+                rows=rows)
         except Exception as e:
             return {"error": str(e)}, 500
 
@@ -661,22 +685,7 @@ class getMetadataAGByID(Resource):
         args = getMetadataAGByID_parser.parse_args()
         ag_collection = args['aggregated_collection_name']
         id = args['id']
-        
-        # one of the two must be provided
-        # if not ag_collection and not id:
-        #    return {"error": "One of the two parameters must be provided"}, 400
-        
-        # file_r = f"/case-tm/src/apis/dummies/getMetadataAGByID_r_{id}.json"
-        # file_rg = f"/case-tm/src/apis/dummies/getMetadataAGByID_rg_{id}.json"
-        
-        # one of the two files must exist
-        #if ag_collection.lower() == "uc3m_researchers":
-        #    file = file_r
-        #elif ag_collection.lower() == "uc3m_research_groups":
-        #    file = file_rg
         try:
-            #with open(file, "r") as file:
-            #    data = json.load(file)
             return sc.do_Q21(agg_corpus_col=ag_collection,
                             doc_id=id)
         except Exception as e:
@@ -692,7 +701,7 @@ getTopicEvolution_parser.add_argument(
 getTopicEvolution_parser.add_argument(
     'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=True)
 getTopicEvolution_parser.add_argument(
-    'topic_id', help='ID of the topic whose evolution is being searched', required=True)
+    'topic_id', help='ID of the topic to retrieve evolution data for. If not provided, evolution data for all topics will be returned.', required=False)
 getTopicEvolution_parser.add_argument(
     'start', help='Specifies an offset (by default, 0) into the responses at which Solr should begin displaying content', required=False)
 getTopicEvolution_parser.add_argument(
@@ -703,17 +712,54 @@ class getTopicEvolution(Resource):
     @api.doc(parser=getTopicEvolution_parser)
     def get(self):
         args = getTopicEvolution_parser.parse_args()
-        corpus_collection = args['corpus_collection']
-        model_name = args['model_name']
-        topic_id = args['topic_id']
-        start = args['start']
-        rows = args['rows']
+        corpus_collection = args['corpus_collection'].lower()
+        model_name = args['model_name'].lower()
+        topic_id_raw = args.get('topic_id')
+        topic_id = topic_id_raw.split("t")[-1] if topic_id_raw and "t" in topic_id_raw else topic_id_raw
+        start = args.get('start')
+        rows = args.get('rows')
+
+        # Validate corpus and model existence
+        if not sc.check_is_corpus(corpus_collection):
+            return {"error": f"Corpus collection {corpus_collection} not found"}, 404
+        if not sc.check_corpus_has_model(corpus_collection, model_name):
+            return {"error": f"Model {model_name} not found in corpus collection {corpus_collection}"}, 404
+
+        # Locate model folder
+        source_path = pathlib.Path("/data/source")
+        matching_folders = [f for f in source_path.iterdir() if f.is_dir() and f.name.lower() == model_name]
+        if not matching_folders:
+            return {"error": f"No matching topic evolution information found for model_name: {model_name}"}, 404
+        matched_folder = matching_folders[0]
         
+        if not (matched_folder / "topicEvolution.json").exists():
+            return {}, 200
+            #return {"error": f"No topic evolution information found for model '{model_name}'."}, 404
+
         try:
-            # @TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getTopicEvolution.json", "r") as file:
+            with open(matched_folder / "topicEvolution.json", "r") as file:
                 data = json.load(file)
+
+            # Filter by topic_id if provided
+            if topic_id is not None:
+                try:
+                    data = [data[int(topic_id)]]
+                except ValueError:
+                    return {"error": "topic_id must be an integer"}, 400
+
+            # Apply pagination if start and rows are valid
+            if start is not None and rows is not None and not topic_id:
+                try:
+                    start = int(start)
+                    rows = int(rows)
+                    if start < 0 or rows <= 0:
+                        raise ValueError
+                    data = data[start:start + rows]
+                except ValueError:
+                    return {"error": "start and rows must be positive integers"}, 400
+
             return data, 200
+
         except Exception as e:
             return {"error": str(e)}, 500
         

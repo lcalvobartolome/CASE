@@ -54,15 +54,18 @@ class AggregatedCorpus(object):
             )
             return
         
+        # Read configuration from config file
+        self.cf = configparser.ConfigParser()
+        self.cf.read(config_file)
+        
+        self.searcheable_field = self.cf.get("aggregated-config", "SearcheableField").split(",")
+        
         self.path_to_raw = path_to_raw
         self.name = path_to_raw.stem.lower()
         self.type = type
         self.id_field = "invID" if type == "researcher" else "rgID"
         
-        # Read configuration from config file
-        self.cf = configparser.ConfigParser()
-        self.cf.read(config_file)
-        
+
         self._logger.info(f"Setting id of the aggregated corpus with name {self.name} to {self.id_field}")
     
     def get_ag_raw_info(self) -> List[dict]:
@@ -80,6 +83,10 @@ class AggregatedCorpus(object):
         # prepare year columns
         df, cols = convert_datetime_to_strftime(df)
         df[cols] = df[cols].applymap(parseTimeINSTANT)
+        
+        # Create SearcheableField by concatenating all the fields that are marked as SearcheableField in the config file
+        df['SearcheableField'] = df[self.searcheable_field].apply(
+            lambda x: ' '.join(x.astype(str)), axis=1)
             
         # for each "researchItems{}" column... we calculate the topics
         self._logger.info("Calculating topics for each row...")
@@ -196,7 +203,8 @@ class AggregatedCorpus(object):
                         "agg_name": self.name,
                         "agg_path": self.path_to_raw.as_posix(),
                         "models": self.models,
-                        "fields": self.fields
+                        "fields": self.fields,
+                        "SearcheableFields": self.searcheable_field,
                         }]
         
         return fields_dict

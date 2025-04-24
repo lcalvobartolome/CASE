@@ -1174,7 +1174,7 @@ class CASESolrClient(SolrClient):
         col = col.lower()
 
         # 1. Check that col is either a corpus or a model collection
-        if not self.check_is_corpus(col) and not self.check_is_model(col):
+        if not self.check_is_corpus(col) and not self.check_is_model(col) and not self.check_is_ag_corpus(col):
             return
 
         # 2. Execute query
@@ -1307,8 +1307,9 @@ class CASESolrClient(SolrClient):
                 corpus_col=corpus_col, doc_id=doc_id)
             lemmas = lemmas_dict['lemmas']
 
-            inf_resp = self.inferencer.infer_doc(text_to_infer=lemmas,
-                                                 model_for_inference=model_name)
+            inf_resp = self.inferencer.infer_doc(
+                text_to_infer=lemmas,
+                model_for_inference=model_name)
             if inf_resp.status_code != 200:
                 self.logger.error(
                     f"-- -- Error attaining thetas from {lemmas} while executing query Q5. Aborting operation...")
@@ -1392,7 +1393,9 @@ class CASESolrClient(SolrClient):
               corpus_col: str,
               string: str,
               start: str,
-              rows: str) -> Union[dict, int]:
+              rows: str,
+              type_col: str,
+              ) -> Union[dict, int]:
         """Executes query Q7.
 
         Parameters
@@ -1401,6 +1404,12 @@ class CASESolrClient(SolrClient):
             Name of the corpus collection
         string: str
             String to be searched in the title of the documents
+        start: str
+            Index of the first document to be retrieved
+        rows: str
+            Number of documents to be retrieved
+        type_col: str
+            Type of the corpus collection. It can be 'corpus' or 'ag'.
 
         Returns
         -------
@@ -1414,10 +1423,10 @@ class CASESolrClient(SolrClient):
         corpus_col = corpus_col.lower()
 
         # 1. Check that corpus_col is indeed a corpus collection
-        if not self.check_is_corpus(corpus_col):
+        if (type_col == "corpus" and not self.check_is_corpus(corpus_col)) or (type_col == "ag" and not self.check_is_ag_corpus(corpus_col)):
             return
-
-        # 2. Get number of docs in the collection (it will be the maximum number of docs to be retireved) if rows is not specified
+    
+        # 2. Get number of docs in the collection (it will be the maximum number of docs to be retrieved) if rows is not specified
         if rows is None:
             q3 = self.querier.customize_Q3()
             params = {k: v for k, v in q3.items() if k != 'q'}
@@ -1569,13 +1578,15 @@ class CASESolrClient(SolrClient):
 
         # 6. Return a dictionary with names more understandable to the end user
         proportion_key = "payload(s3_{},t{})".format(model_name, topic_id)
+        # keep only results in results.docs for which the proportion_key is present and larger than 0
+        results.docs = [doc for doc in results.docs if proportion_key in doc.keys() and doc[proportion_key] > 0]
         for dict in results.docs:
             if proportion_key in dict.keys():
                 dict["topic_relevance"] = dict.pop(proportion_key)*100
             dict["num_words_per_doc"] = dict.pop("nwords_per_doc")
 
         # 7. Get the topic's top words
-        start_model, rows_model = self.custom_start_and_rows(start, None, model_name)
+        start_model, rows_model = self.custom_start_and_rows(0, None, model_name) # we always need to start in 0 because we want the info from all the topics
         q10_results, sc = self.do_Q10(
             model_col=model_name,
             start=start_model,
@@ -2239,7 +2250,7 @@ class CASESolrClient(SolrClient):
             return
         
         # 6. Get the topic's top words
-        start_model, rows_model = self.custom_start_and_rows(start, None, model_name)
+        start_model, rows_model = self.custom_start_and_rows(0, None, model_name) # we always need to start in 0 because we want the info from all the topics
         q10_results, sc = self.do_Q10(
             model_col=model_name,
             start=start_model,
@@ -2270,6 +2281,9 @@ class CASESolrClient(SolrClient):
             return new_dict
         
         proportion_key = "payload(agg_rel_{},t{})".format(model_name, topic_id)
+        # remove from results.docs the ones that do not have the f"researchItems_{corpus_name}" field
+        results.docs = [dict for dict in results.docs if f"researchItems_{corpus_name}" in dict.keys()]
+
         for dict in results.docs:
             if proportion_key in dict.keys():
                 dict["topic_relevance"] = dict.pop(proportion_key) * 100

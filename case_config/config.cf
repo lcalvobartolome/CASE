@@ -86,3 +86,4 @@ SciPapers_TM_40tpc=scipapers
 aei_tm_25tpc=aei
 aei_tm_50tpc=aei
 cordis_tm_50tpc=cordis
+SearcheableField=id,Name
