@@ -786,13 +786,19 @@ class getAGDocsWithString(Resource):
         start = args['start']
         rows = args['rows']
         
+        if ag_collection is None:
+            ag_collection = "uc3m_researchers"
+        
+        type_col = "ag" if "uc3m" in ag_collection else "corpus"
+
         try:
-            # @TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getAGDocsWithString.json", "r") as file:
-                data = json.load(file)
-            return data, 200
+            return sc.do_Q7(corpus_col=ag_collection,
+                            string=string,
+                            start=start,
+                            rows=rows,
+                            type_col=type_col)
         except Exception as e:
-            return {"error": str(e)}, 500
+            return str(e), 500
 
 # ------------------------------------------------------
 # getSimiliarityCriteriaList
@@ -1016,21 +1022,21 @@ getThetasResearcherByID_parser.add_argument(
 getThetasResearcherByID_parser.add_argument(
     'corpus_collection', help='Name of the corpus collection', required=True)
 getThetasResearcherByID_parser.add_argument(
-    'model_name', help='Name of the model reponsible for the creation of the doc-topic distribution', required=False)
+    'model_name', help='Name of the model responsible for the creation of the doc-topic distribution', required=False)
 
 @api.route('/getThetasResearcherByID/')
 class getThetasResearcherByID(Resource):
     @api.doc(parser=getThetasResearcherByID_parser)
     def get(self):
         args = getThetasResearcherByID_parser.parse_args()
-        id = args['id']
+        ag_id = args['id']
         corpus_collection = args['corpus_collection']
         model_name = args['model_name']
         
         try:
-            # @TODO: Implement this query
-            with open("/case-tm/src/apis/dummies/getThetasResearcherByID.json", "r") as file:
-                data = json.load(file)
-            return data, 200
+            return sc.do_Q22(
+                ag_col=corpus_collection,
+                ag_id=ag_id,
+                model_name=model_name)
         except Exception as e:
             return {"error": str(e)}, 500

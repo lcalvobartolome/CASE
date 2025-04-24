@@ -293,6 +293,16 @@ class Queries(object):
         }
         
         
+        # ================================================================
+        # # Q22: getThetasResearcherByID  ##################################################################
+        # # Get document-topic distribution of a selected researcher / rg in a
+        # # ag collection
+        # ================================================================
+        self.Q22 = {
+            'q': 'id:{}',
+            'fl': 'agg_tpc_{}',
+        }
+        
         
     def customize_Q1(self,
                      id: str,
@@ -849,3 +859,27 @@ class Queries(object):
             'rows': self.Q20['rows'].format(rows),
         }
         return custom_q20
+    
+    def customize_Q22(self,
+                     id: str,
+                     model_name: str) -> dict:
+        """Customizes query Q2 'getThetasResearcherById'.
+
+        Parameters
+        ----------
+        id: str
+            AG id.
+        model_name: str
+            Name of the topic model whose topic distribution is to be retrieved.
+
+        Returns
+        -------
+        custom_q22: dict
+            Customized query Q22.
+        """
+
+        custom_q1 = {
+            'q': self.Q22['q'].format(id),
+            'fl': self.Q22['fl'].format(model_name),
+        }
+        return custom_q1

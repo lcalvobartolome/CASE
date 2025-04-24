@@ -2373,3 +2373,61 @@ class CASESolrClient(SolrClient):
             return
 
         return results.docs, sc
+
+    def do_Q22(
+        self,
+        ag_col: str,
+        ag_id: str,
+        model_name: str
+    ) -> Union[dict, int]:
+        """Executes query Q22.
+
+        Parameters
+        ----------
+        ag_col : str
+            Name of the ag collection (e.g., uc3m_researchers, uc3m_research_groups)
+        ag_id : str
+            ID of the researcher / research group to be retrieved.
+        model_name : str
+            Name of the model to be used for the retrieval.
+
+        Returns
+        -------
+        thetas: dict
+            JSON object with the document-topic proportions (thetas)
+        sc : int
+            The status code of the response.  
+        """
+
+        # 0. Convert corpus and model names to lowercase
+        ag_col = ag_col.lower()
+        model_name = model_name.lower()
+
+        # 1. Check that corpus_col is indeed a corpus collection
+        if not self.check_is_ag_corpus(ag_col):
+            return
+        
+
+        # 2. Check that corpus_col has the model_name field
+        if not self.check_ag_corpus_has_model(ag_col, model_name):
+            return
+
+        # 3. Execute query
+        q22 = self.querier.customize_Q22(id=ag_id, model_name=model_name)
+        params = {k: v for k, v in q22.items() if k != 'q'}
+
+        sc, results = self.execute_query(
+            q=q22['q'], col_name=ag_col, **params)
+
+        if sc != 200:
+            self.logger.error(
+                f"-- -- Error executing query Q22. Aborting operation...")
+            return
+
+        # 4. Return -1 if thetas field is not found (it could happen that a document in a collection has not thetas representation since it was not kept within the corpus used for training the model)
+        if 'agg_tpc_' + model_name in results.docs[0].keys():
+            resp = {'thetas': results.docs[0]['agg_tpc_' + model_name]}
+        else:
+            resp = {'thetas': -1}
+
+        return resp, sc
