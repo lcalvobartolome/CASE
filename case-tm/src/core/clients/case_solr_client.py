@@ -2376,7 +2376,6 @@ class CASESolrClient(SolrClient):
 
     def do_Q22(
         self,
-        ag_col: str,
         ag_id: str,
         model_name: str
     ) -> Union[dict, int]:
@@ -2384,8 +2383,6 @@ class CASESolrClient(SolrClient):
 
         Parameters
         ----------
-        ag_col : str
-            Name of the ag collection (e.g., uc3m_researchers, uc3m_research_groups)
         ag_id : str
             ID of the researcher / research group to be retrieved.
         model_name : str
@@ -2398,15 +2395,8 @@ class CASESolrClient(SolrClient):
         sc : int
             The status code of the response.  
         """
-
-        # 0. Convert corpus and model names to lowercase
-        ag_col = ag_col.lower()
-        model_name = model_name.lower()
-
-        # 1. Check that corpus_col is indeed a corpus collection
-        if not self.check_is_ag_corpus(ag_col):
-            return
         
+        ag_col = self.cf.get("aggregated-config", "researchers_collection")
 
         # 2. Check that corpus_col has the model_name field
         if not self.check_ag_corpus_has_model(ag_col, model_name):

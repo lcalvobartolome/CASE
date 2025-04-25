@@ -87,3 +87,4 @@ aei_tm_25tpc=aei
 aei_tm_50tpc=aei
 cordis_tm_50tpc=cordis
 SearcheableField=id,Name
+researchers_collection=uc3m_researchers

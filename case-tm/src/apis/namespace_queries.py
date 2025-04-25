@@ -1033,9 +1033,14 @@ class getThetasResearcherByID(Resource):
         corpus_collection = args['corpus_collection']
         model_name = args['model_name']
         
+        if model_name is None:
+            models, _ = sc.get_corpus_models(corpus_collection)
+            if not models:
+                return {"error": f"No models found for corpus collection '{corpus_collection}'."}, 404
+            model_name = models[0]
+        
         try:
             return sc.do_Q22(
-                ag_col=corpus_collection,
                 ag_id=ag_id,
                 model_name=model_name)
         except Exception as e:
