@@ -55,8 +55,8 @@ class CASESolrClient(SolrClient):
         
         if field_name in self.added_fields:
             self.logger.info(
-                f"-- -- Field {field_name} already added to {col_name} collection. Aborting operation...")
-            return
+                f"-- -- Field {field_name} already added to {col_name} collection.")
+            return [{'name': col_name}], 200
         
         res, sc = super().add_field_to_schema(col_name, field_name, field_type)
         
@@ -1646,9 +1646,13 @@ class CASESolrClient(SolrClient):
                 }
 
                 merged_tpcs.append(new_dict)
+
         except Exception as e:
             self.logger.error(f"Error merging results: {e}")
             return
+        
+        # sort the merged_tpcs by "id" in ascending order ("id" is in the form t{id}, so we need to extract the number, convert it to int, and sort)
+        merged_tpcs.sort(key=lambda x: int(x['id'].split('t')[1]))
 
         return merged_tpcs, sc
 
@@ -1699,6 +1703,9 @@ class CASESolrClient(SolrClient):
                 f"-- -- Error executing query Q10. Aborting operation...")
             return
 
+        # sort results.docs by "id" in ascending order ("id" is in the form t{id}, so we need to extract the number, convert it to int, and sort)
+        results.docs.sort(key=lambda x: int(x['id'].split('t')[1]))
+        
         return results.docs, sc
 
     def do_Q11(self,
@@ -2175,6 +2182,9 @@ class CASESolrClient(SolrClient):
             self.logger.error(
                 f"-- -- Error executing query Q19. Aborting operation...")
             return
+        
+        # sort results.docs by "id" in ascending order ("id" is in the form t{id}, so we need to extract the number, convert it to int, and sort)
+        results.docs.sort(key=lambda x: int(x['id'].split('t')[1]))
 
         return results.docs, sc
 

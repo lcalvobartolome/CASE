@@ -103,7 +103,7 @@ class Queries(object):
         # ================================================================
         self.Q7 = {
             'q': '{}:{}',
-            'fl': 'id',
+            'fl': 'id,SearcheableField',
             'start': '{}',
             'rows': '{}'
         }

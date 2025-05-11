@@ -112,8 +112,17 @@ class AggregatedCorpus(object):
                     subset_matrix = vstack([thetas[i] for i in indices])
                     mean_vector = subset_matrix.mean(axis=0)  # 1 x n_topics
                     mean_vector = mean_vector.A1  # Convert to 1D array
-                    mean_vector = sum_up_to(mean_vector, max_sum)
                     
+                    # put to 0 value of mean vector that are < 0.02 and renormalize
+                    mean_vector[mean_vector < 0.02] = 0
+                    
+                    total = mean_vector.sum()
+                    if total > 0:
+                        mean_vector = mean_vector / total
+                    
+                    # sum up to max_sum
+                    mean_vector = sum_up_to(mean_vector, max_sum)
+                        
                     # Convert to string representation
                     rpr = ""
                     for idx, val in enumerate(mean_vector):
